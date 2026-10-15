@@ -95,6 +95,12 @@
       events: demo ? seedEvents() : [],
       review: null,
       conflictAck: false,
+      // newest first; a few seeded entries so Recent activity isn't empty on a fresh demo
+      activity: demo ? [
+        { t: 'Calendar updated with your timetable', ago: '2 minutes ago', icon: 'cal' },
+        { t: 'CS301_Syllabus.pdf uploaded', ago: '5 minutes ago', icon: 'up' },
+        { t: '9 deadlines confirmed from CS301', ago: '6 minutes ago', icon: 'ok' }
+      ] : [],
       conflictMsg: '',
       settings: { notif: { email: true, conflict: true, weekly: false }, gcal: false, extraCourses: [], removedCourses: [] },
       ui: { calFilters: { timetable: true, assignments: true, exams: true, other: true }, dashCourses: { HIST220: false }, dashTypes: {}, taskSort: 'date' }
@@ -112,6 +118,8 @@
   }
   var state = load();
   function save() { mem = state; try { sessionStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* ignore */ } }
+  // real session actions are stamped with a time; seeded ones carry a fixed 'ago' label
+  function log(t, icon) { var a = state.activity || (state.activity = []); a.unshift({ t: t, at: Date.now(), icon: icon || 'edit' }); if (a.length > 30) a.length = 30; }
   function wipe() { mem = null; state = seed('demo'); try { sessionStorage.removeItem(KEY); } catch (e) { /* ignore */ } }
 
   // ---------- extraction pools (fake syllabus reading) ----------
@@ -159,9 +167,17 @@
     all: function () { return state.events; },
     deadlines: function () { return state.events.filter(function (e) { return e.cat !== 'timetable'; }); },
     get: function (id) { return state.events.filter(function (e) { return e.id === id; })[0] || null; },
-    add: function (e) { state.events.push(e); save(); return e; },
-    update: function (id, patch) { var e = API.get(id); if (e) { for (var k in patch) e[k] = patch[k]; save(); } return e; },
-    remove: function (id) { state.events = state.events.filter(function (e) { return e.id !== id; }); save(); },
+    add: function (e) { state.events.push(e); log('Added “' + e.title + '”', 'add'); save(); return e; },
+    update: function (id, patch) {
+      var e = API.get(id); if (!e) return e;
+      var msg = 'done' in patch && patch.done !== e.done ? (patch.done ? ['Marked “' + e.title + '” done', 'ok'] : ['Reopened “' + e.title + '”', 'edit'])
+        : 'conflict' in patch && e.conflict && !patch.conflict ? ['Resolved the clash on “' + e.title + '”', 'ok'] : ['Updated “' + e.title + '”', 'edit'];
+      for (var k in patch) e[k] = patch[k];
+      log(msg[0], msg[1]); save(); return e;
+    },
+    remove: function (id) { var e = API.get(id); state.events = state.events.filter(function (x) { return x.id !== id; }); if (e) log('Deleted “' + e.title + '”', 'del'); save(); },
+    activity: function () { return state.activity || (state.activity = []); },
+    log: function (t, icon) { log(t, icon); save(); },
     newEvent: function (o) {
       var kind = KINDS.filter(function (k) { return k.k === o.cat; })[0] || KINDS[0];
       var type = o.type || kind.type;
@@ -202,6 +218,7 @@
     commitReview: function () {
       var r = state.review; if (!r) return 0; var n = r.items.length;
       r.items.forEach(function (e) { var c = JSON.parse(JSON.stringify(e)); c.id = uid(); delete c.sub; state.events.push(c); });
+      log(r.file + ' uploaded', 'up'); log(n + ' deadlines added from ' + r.file, 'ok');
       state.review = null; save(); return n;
     }
   };

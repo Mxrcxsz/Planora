@@ -130,7 +130,7 @@
     if (st.panel === 'list') {
       var list = eventsOn(st.selected);
       h += '<div class="p-label">Details</div><div class="p-date">' + D.long(st.selected).replace(/ \d{4}$/, '') + '</div>' +
-        (list.length ? list.map(function (x) { return '<button type="button" class="p-card b-' + x.cat + '" data-act="open" data-id="' + x.id + '"><div class="t' + (x.done ? ' done' : '') + '">' + esc(x.title) + '</div><div class="s">' + esc(x.course + ' · ' + x.type + (x.start && x.dur ? ' · ' + D.hhmm(D.mins(x.start)) + '–' + D.hhmm(D.mins(x.start) + x.dur * 60) : x.start && !x.allDay ? ' · due ' + x.start : '') + (x.weight ? ' · ' + x.weight + '%' : '')) + '</div></button>'; }).join('') : '<p class="muted">Nothing due on this day.</p>') +
+        (list.length ? list.map(function (x) { return '<button type="button" class="p-card b-' + x.cat + '" data-act="open" data-id="' + x.id + '"><div class="t' + (x.done ? ' done' : '') + '">' + esc(x.title) + '</div><div class="s">' + esc(x.course + ' · ' + x.type + (x.start && x.dur ? ' · ' + D.hhmm(D.mins(x.start)) + '–' + D.hhmm(D.mins(x.start) + x.dur * 60) : x.start && !x.allDay ? ' · due ' + x.start : '') + (x.weight ? ' · ' + x.weight + '%' : '')) + '</div></button>'; }).join('') : '<p class="muted">Nothing planned for this day yet. Add a class, an outing or anything else you want to keep track of.</p>') +
         '<button type="button" class="btn btn-secondary btn-sm w-100 mt-2" data-act="add" data-cat="assignments">+ Add event on this day</button>';
     } else {
       var b = P.badgeOf(e);

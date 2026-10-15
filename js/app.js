@@ -106,6 +106,7 @@
     t.className = 'toast align-items-center show'; t.setAttribute('role', 'status');
     t.innerHTML = '<div class="d-flex"><div class="toast-body fw-semibold">' + UI.esc(msg) + '</div><button type="button" class="btn-close btn-close-white me-2 m-auto" aria-label="Close"></button></div>';
     c.appendChild(t);
+    while (c.children.length > 3) c.removeChild(c.firstChild); // at most 3 on screen; the oldest makes way
     var kill = function () { t.remove(); };
     t.querySelector('.btn-close').addEventListener('click', kill);
     setTimeout(kill, 4200);
