@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planora — The Smart Extractor</title>
+<link rel="icon" href="assets/planora-wordmark.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
+<link href="css/theme.css" rel="stylesheet">
+</head>
+<body>
+
+<header class="pl-navbar"><div class="wrap pl-nav">
+  <a class="brand" href="index.html"><img src="assets/planora-wordmark.png" alt="Planora"></a>
+  <nav class="d-none d-md-flex gap-4 fw-semibold text-secondary" aria-label="Sections"><a class="text-secondary" href="#features">Product</a><a class="text-secondary" href="#how">How it works</a><a class="text-secondary" href="#start">Pricing</a></nav>
+  <div class="d-flex gap-2"><a class="btn btn-secondary" href="login.html">Log in</a><a class="btn btn-primary" href="signup.html">Sign up free</a></div>
+</div></header>
+<main>
+<div class="wrap"><section class="hero">
+  <div>
+    <img src="assets/planora-logo.png" alt="Planora — The Smart Extractor" style="width:260px;max-width:100%;height:auto;margin:0 0 24px -8px;display:block">
+    <h1>Stop building your calendar by hand.</h1>
+    <p class="lead">Upload a syllabus and Planora finds every deadline, reading, and exam — then drops them straight into one calendar you can trust.</p>
+    <div class="d-flex gap-2 flex-wrap mt-4"><a class="btn btn-primary btn-lg" href="signup.html">Sign up free</a><a class="btn btn-secondary btn-lg" href="#how">See how it works</a></div>
+    <div class="faint small mt-3">No credit card. Takes about two minutes. Demo login: any email, password <b>demo1234</b>.</div>
+  </div>
+  <div class="mock" aria-hidden="true">
+    <div class="mock-head"><span>Extracted from CS301_Syllabus.pdf</span><span class="dots"><span></span><span></span><span></span></span></div>
+    <div class="irow"><div class="irow-icon">📄</div><div class="irow-body"><div class="irow-title">Problem Set 3</div><div class="irow-sub">Due Oct 21 · Homework</div></div><span class="pbadge ok">Verified</span></div>
+    <div class="irow"><div class="irow-icon">🧪</div><div class="irow-body"><div class="irow-title">Midterm Exam</div><div class="irow-sub">Oct 28 · In class</div></div><span class="pbadge ok">Verified</span></div>
+    <div class="irow" style="margin-bottom:0"><div class="irow-icon">📝</div><div class="irow-body"><div class="irow-title">Reading response</div><div class="irow-sub">Due date unclear</div></div><span class="pbadge warn">Check this</span></div>
+  </div>
+</section></div>
+<div class="wrap" id="features"><section class="py-5">
+  <h2 style="font-size:2rem;max-width:20ch" class="mb-4">Built for the way a semester actually feels</h2>
+  <div class="row g-3">
+    <div class="col-md-4"><div class="feat-card"><div class="feat-icon">⚡</div><h3>Reads any syllabus</h3><p class="muted mb-0">PDF, Word doc, or a photo of a printed page — Planora pulls out dates, titles, and weight without you retyping anything.</p></div></div>
+    <div class="col-md-4"><div class="feat-card"><div class="feat-icon">✓</div><h3>You stay in control</h3><p class="muted mb-0">Every deadline is marked verified or uncertain, so you know exactly what to double-check before it goes on your calendar.</p></div></div>
+    <div class="col-md-4"><div class="feat-card"><div class="feat-icon">◐</div><h3>Catches double-bookings</h3><p class="muted mb-0">If two classes land the same deadline on you, Planora flags the conflict and helps you work out what to do about it.</p></div></div>
+  </div>
+</section></div>
+<div class="wrap" id="how"><section class="pb-5"><div class="how">
+  <h2 style="font-size:1.75rem">Three steps from syllabus to schedule</h2><p class="muted mb-4">No setup, no manual data entry — just upload and review.</p>
+  <div class="row g-4">
+    <div class="col-md-4"><div class="step-num">1</div><h3>Upload your syllabus</h3><p class="muted mb-0">Drop in a file for each class. Planora scans it in seconds.</p></div>
+    <div class="col-md-4"><div class="step-num">2</div><h3>Review what it found</h3><p class="muted mb-0">Confirm each deadline, or fix anything Planora wasn't sure about.</p></div>
+    <div class="col-md-4"><div class="step-num">3</div><h3>See it all in one place</h3><p class="muted mb-0">Every class lands on one calendar and task list, kept in sync.</p></div>
+  </div></div></section></div>
+<div class="wrap" id="start"><section class="pb-5"><div class="cta-band"><div><h2>Ready to get your semester out of your inbox?</h2><p>Join students who stopped missing deadlines buried in PDF syllabi.</p></div><a class="btn btn-primary btn-lg" href="signup.html">Sign up free</a></div></section></div>
+</main>
+<div class="wrap"><footer class="foot"><div>© 2026 Planora</div><div class="d-flex gap-3"><span>Privacy</span><span>Terms</span><span>Contact</span></div></footer></div>
+
+<script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
+<script src="js/store.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
