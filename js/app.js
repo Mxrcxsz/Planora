@@ -188,5 +188,40 @@
   };
   UI.eventHref = function (e) { return P.statusOf(e) === 'conflict' ? 'conflict.html' : P.statusOf(e) === 'check' ? 'edit.html?id=' + encodeURIComponent(e.id) + '&from=event' : 'calendar.html?event=' + encodeURIComponent(e.id); };
 
+  // ---------- login / signup side artwork ----------
+  // Marketing copy plus decorative mini-mockups of the core features (the mockups are aria-hidden), built from the demo scenario.
+  (function authArt() {
+    var L = document.querySelector('.auth-art-left'), R = document.querySelector('.auth-art-right');
+    if (!L || !R) return;
+    var ico = function (d) { return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>'; };
+    var CAL = ico('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'),
+      PIN = ico('<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>'),
+      PCT = ico('<path d="M19 5 5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/>'),
+      BELL = ico('<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>'),
+      CHECK = ico('<path d="M20 6 9 17l-5-5"/>');
+    var ev = function (cls, top, h, t, s) { return '<div class="aw-ev ' + cls + '" style="top:' + top + 'px;height:' + h + 'px"><b>' + t + '</b>' + (s ? '<small>' + s + '</small>' : '') + '</div>'; };
+    var copy = function (eyebrow, head, text, extra) { return '<div class="art-copy"><span class="art-eyebrow">' + eyebrow + '</span><h2>' + head + '</h2><p>' + text + '</p>' + (extra || '') + '</div>'; };
+    L.innerHTML = copy('Syllabus to schedule', 'Every deadline, in one place.', 'Upload a syllabus and Planora pulls out each due date, exam and reading, then puts them straight onto your calendar.',
+        '<ul class="art-ticks"><li>' + CHECK + 'Free for students</li><li>' + CHECK + 'Syncs with Google Calendar</li></ul>') +
+      '<div class="art-stack" aria-hidden="true">' +
+      '<div class="art-card art-week f1"><div class="aw-head"><div><span>TUE</span><b class="today">21</b></div><div><span>WED</span><b>22</b></div><div><span>THU</span><b>23</b></div></div>' +
+      '<div class="aw-body"><div class="aw-col">' + ev('tt', 10, 50, 'MATH210 Lecture', '1:00 – 2:30 PM') + '<div class="aw-now" style="top:74px"></div>' + ev('as done', 92, 24, CHECK + ' Problem Set 3', '') + '</div>' +
+      '<div class="aw-col">' + ev('as', 4, 28, 'Essay draft', '') + ev('tt', 40, 50, 'CS301 Lecture', '10:00 – 11:30 AM') + '</div>' +
+      '<div class="aw-col">' + ev('tt', 10, 50, 'MATH210 Lecture', '1:00 – 2:30 PM') + ev('tt', 70, 50, 'HIST220 Lecture', '3:30 – 5:00 PM') + '</div></div></div>' +
+      '<div class="art-chip f2">' + CHECK + ' Essay draft — due 9:00 AM</div>' +
+      '<div class="art-card art-upload f3"><div class="au-file"><span class="au-ic">PDF</span><div><b>CS301_Syllabus.pdf</b><small>Reading your syllabus…</small></div></div>' +
+      '<div class="au-bar"><span></span></div><div class="au-found">' + CHECK + ' Found 6 dates</div>' +
+      '<ul class="au-list"><li><i class="as"></i>Problem Set 2<em>Sep 24</em></li><li><i class="ex"></i>Midterm Exam<em>Oct 28</em></li><li><i class="as"></i>Group project proposal<em>Nov 3</em></li></ul></div></div>';
+    R.innerHTML = '<div class="art-stack" aria-hidden="true">' +
+      '<div class="art-card art-conflict f2"><div class="ac-head"><span class="ac-ic">!</span><div><b>Scheduling conflict</b><small>Tue, 28 Oct · 10:00 AM</small></div></div>' +
+      '<div class="ac-vs"><div><span class="ac-tag">Exam</span><b>CS301</b><small>Midterm · 30%</small></div><em>vs</em><div><span class="ac-tag">Quiz</span><b>MATH210</b><small>Pop quiz · 5%</small></div></div>' +
+      '<div class="ac-btns"><span class="b1">Select new date</span><span class="b2">Resolve</span></div></div>' +
+      '<div class="art-card art-event f3"><div class="ae-title"><i class="ex"></i>Midterm Exam</div>' +
+      '<div class="ae-row">' + CAL + 'Tue, 28 Oct · 10:00 AM – 12:00 PM</div><div class="ae-row">' + PIN + 'LT 2-1</div><div class="ae-row">' + PCT + 'Weightage 30%</div>' +
+      '<div class="ae-remind">' + BELL + '<span>Remind me</span><span class="pill on">1 day before</span><span class="pill">1 hour</span></div></div>' +
+      '<div class="art-toast f1">' + CHECK + ' Added “Problem Set 4” on Nov 4</div></div>' +
+      copy('Stay ahead', 'Clashes caught before they catch you.', 'Planora flags the moment two deadlines overlap, so you can move one, mark it TBD or plan around it in a tap.');
+  })();
+
   window.PlUI = UI;
 })();
