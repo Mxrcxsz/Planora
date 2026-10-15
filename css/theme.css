@@ -18,6 +18,7 @@ h1{font-size:2.125rem;line-height:1.15} h2{font-size:1.5rem} h3{font-size:1.125r
 a{text-decoration:none} a:hover{text-decoration:underline}
 :focus-visible{outline:2px solid var(--accent)!important;outline-offset:2px}
 .wrap{max-width:1148px;margin:0 auto;padding:0 16px;width:100%}
+.wrap-wide,.wide-page .pl-navbar .wrap{max-width:none;padding:0 24px}@media(max-width:600px){.wrap-wide,.wide-page .pl-navbar .wrap{padding:0 16px}}
 .muted{color:var(--muted)} .faint{color:var(--faint)}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 
@@ -53,6 +54,7 @@ a.pbadge:hover{text-decoration:none;filter:brightness(.97)}
 .pl-navbar{background:#fff;border-bottom:1px solid var(--line);position:relative;z-index:30}
 .pl-nav{height:72px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .pl-nav .brand img{height:34px;width:auto;display:block}
+@media(min-width:801px){.wide-page .pl-nav .brand{width:240px;flex-shrink:0;display:flex;justify-content:center}}
 .pl-tabs{display:flex;gap:4px}
 .pl-tab{padding:.55rem 1rem;border-radius:999px;font-weight:600;font-size:.9rem;color:var(--muted);min-height:40px;display:inline-flex;align-items:center}
 .pl-tab:hover{color:var(--ink);background:var(--bg);text-decoration:none}
@@ -209,7 +211,7 @@ a.irow{color:inherit} a.irow:hover{background:var(--bg);text-decoration:none}
 
 /* ===== calendar ===== */
 .cal-layout{display:grid;grid-template-columns:240px minmax(0,1fr);gap:20px;padding:24px 0 56px;align-items:start}
-.cal-layout.with-panel{grid-template-columns:240px minmax(0,1fr) 300px}
+.cal-layout.with-panel{grid-template-columns:240px minmax(0,1fr) 320px}
 @media(max-width:1100px){.cal-layout.with-panel{grid-template-columns:240px minmax(0,1fr)}.cal-layout.with-panel .cal-panel{grid-column:1/-1}}
 @media(max-width:800px){.cal-layout,.cal-layout.with-panel{grid-template-columns:1fr}}
 .side-label{font-weight:700;font-size:.78rem;color:var(--muted);margin:18px 0 8px}
@@ -240,7 +242,7 @@ a.irow{color:inherit} a.irow:hover{background:var(--bg);text-decoration:none}
 .dow-row,.grid7{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
 .dow{text-align:center;font-size:.78rem;font-weight:600;color:var(--muted);padding-bottom:8px}
 .grid7{gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r-ctl);overflow:hidden}
-.cell{min-height:108px;padding:6px 6px 4px;position:relative;background:#fff;cursor:pointer;text-align:left;border:0;display:block;width:100%;font:inherit;color:inherit}
+.cell{min-height:clamp(108px,calc((100vh - 290px) / 6),180px);padding:6px 6px 4px;position:relative;background:#fff;cursor:pointer;text-align:left;border:0;display:block;width:100%;font:inherit;color:inherit}
 .cell:hover{background:var(--bg)}.cell.muted{background:#FAFAFC;cursor:default}.cell.sel{background:var(--accent-soft)}
 .cell .num{font-weight:600;font-size:.82rem;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%;margin:0 0 2px -2px}
 .cell.today .num{background:var(--accent);color:#fff}.cell.muted .num{color:#B5B9C6;font-weight:500}
@@ -251,6 +253,7 @@ a.irow{color:inherit} a.irow:hover{background:var(--bg);text-decoration:none}
 .ev .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}.ev .t.done{text-decoration:line-through;color:var(--faint)}
 .ev .w{color:var(--faint);font-size:.66rem}
 .more{font-size:.68rem;color:var(--faint);font-weight:600}
+@media(min-width:1500px){.ev{font-size:.78rem}.cell{padding:8px 8px 6px}}
 /* time grid */
 .tg{--hh:48px}.tg .trow{display:grid}
 .tg.n7 .trow{grid-template-columns:56px repeat(7,minmax(0,1fr))}.tg.n1 .trow{grid-template-columns:56px minmax(0,1fr)}
