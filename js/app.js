@@ -4,6 +4,51 @@
   var P = window.Planora, D = P.D;
   var UI = {};
 
+  // ---------- page transitions ----------
+  // is-entering gates the CSS entrance animation to the first render; is-leaving fades <main> out before navigating.
+  var root = document.documentElement, calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  root.classList.add('is-entering');
+  setTimeout(function () { root.classList.remove('is-entering'); }, 1000);
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest('a[href]');
+    if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    if ((a.target && a.target !== '_self') || a.hasAttribute('download') || a.dataset.bsToggle) return;
+    if (a.protocol !== location.protocol || a.host !== location.host) return;
+    if (a.pathname === location.pathname && a.search === location.search && a.hash) return; // in-page anchor
+    if (calm) return;
+    e.preventDefault();
+    if (a.classList.contains('pl-tab')) moveTab(a);
+    root.classList.add('is-leaving');
+    setTimeout(function () { location.href = a.href; }, 200);
+  });
+  // coming back via the back/forward cache restores the faded-out page
+  // and puts the tab pill back on this page's tab
+  window.addEventListener('pageshow', function (e) {
+    if (!e.persisted) return;
+    root.classList.remove('is-leaving');
+    var tabs = document.querySelector('.pl-tabs'); if (!tabs) return;
+    tabs.classList.remove('is-moving');
+    tabs.querySelectorAll('.pl-tab').forEach(function (x) { x.classList.toggle('active', x.getAttribute('aria-current') === 'page'); });
+    var cur = tabs.querySelector('.pl-tab.active');
+    if (cur) placeInd(tabs, cur, false); else tabs.classList.remove('ind-ready');
+  });
+
+  function placeInd(tabs, tab, animate) {
+    var ind = tabs.querySelector('.pl-tab-ind'); if (!ind || !tab) return;
+    if (!animate) ind.style.transition = 'none';
+    ind.style.transform = 'translateX(' + tab.offsetLeft + 'px)'; ind.style.width = tab.offsetWidth + 'px';
+    if (!animate) { void ind.offsetWidth; ind.style.transition = ''; }
+    tabs.classList.add('ind-ready');
+  }
+  function moveTab(tab) {
+    var tabs = tab.closest('.pl-tabs'); if (!tabs) return;
+    var had = tabs.classList.contains('ind-ready');
+    tabs.classList.add('is-moving'); // the pill is now the only background layer (no hover grey fading out on top of it)
+    tabs.querySelectorAll('.pl-tab.active').forEach(function (x) { x.classList.remove('active'); });
+    tab.classList.add('active');
+    placeInd(tabs, tab, had);
+  }
+
   UI.esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   UI.qs = function (k) { return new URLSearchParams(location.search).get(k); };
   UI.badge = function (e) { var b = P.badgeOf(e); return '<span class="pbadge ' + b.c + '">' + b.t + '</span>'; };
@@ -25,24 +70,32 @@
     var tabs = [['dashboard', 'Dashboard', 'dashboard.html'], ['calendar', 'Calendar', 'calendar.html'], ['tasks', 'Tasks', 'tasks.html'], ['upload', 'Upload', 'upload.html']];
     var t = tabs.map(function (x) { return '<a class="pl-tab' + (x[0] === active ? ' active' : '') + '" href="' + x[2] + '"' + (x[0] === active ? ' aria-current="page"' : '') + '>' + x[1] + '</a>'; }).join('');
     el.innerHTML =
-      '<div class="pl-navbar">' +
+      '<div class="pl-navbar app">' +
       '<div class="wrap pl-nav"><a class="brand" href="dashboard.html"><img src="assets/planora-wordmark.png" alt="Planora"></a>' +
-      '<div class="pl-tabs">' + t + '</div>' +
+      '<div class="pl-tabs"><span class="pl-tab-ind" aria-hidden="true"></span>' + t + '</div>' +
       '<div class="pl-right"><button type="button" class="icon-circle" id="openSearch" aria-label="Search">' + SEARCH_SVG + '</button>' +
       '<a class="avatar" href="settings.html" aria-label="Settings">' + P.initials() + '</a></div></div>' +
       '<div class="wrap pl-tabs-m">' + t + '</div>' +
-      '<div class="nav-search" id="navSearch" hidden><form class="ns-form" action="search.html" role="search">' + SEARCH_SVG +
+      '<div class="nav-search" id="navSearch" inert><form class="ns-form" action="search.html" role="search">' + SEARCH_SVG +
       '<input class="ns-input" id="nsInput" type="search" name="q" placeholder="Search deadlines, courses, tasks" aria-label="Search" autocomplete="off">' +
       '<button type="submit" class="ns-go">Search</button></form>' +
       '<button type="button" class="ns-close" id="closeSearch" aria-label="Close search">' + X_SVG + '</button></div></div>';
-    var ov = document.getElementById('navSearch'), inp = document.getElementById('nsInput');
-    function open() { ov.hidden = false; inp.value = ''; inp.focus(); }
-    function close() { ov.hidden = true; document.getElementById('openSearch').focus(); }
+    var tabsEl = el.querySelector('.pl-tabs'), sync = function () { placeInd(tabsEl, tabsEl.querySelector('.pl-tab.active'), false); };
+    sync(); window.addEventListener('resize', sync);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(sync); // web fonts change tab widths
+    var bar = el.querySelector('.pl-navbar'), ov = document.getElementById('navSearch'), inp = document.getElementById('nsInput'), isOpen = false;
+    // the sweep is driven by .search-active on the navbar (see theme.css); inert keeps the closed overlay out of the tab order
+    function open() {
+      isOpen = true; inp.value = ''; ov.inert = false; bar.classList.add('search-active');
+      setTimeout(function () { if (isOpen) inp.focus(); }, 150);
+    }
+    function close() { isOpen = false; ov.inert = true; bar.classList.remove('search-active'); document.getElementById('openSearch').focus(); }
     document.getElementById('openSearch').addEventListener('click', open);
     document.getElementById('closeSearch').addEventListener('click', close);
     ov.addEventListener('mousedown', function (e) { if (!e.target.closest('.ns-form') && !e.target.closest('.ns-close')) close(); });
+    document.addEventListener('mousedown', function (e) { if (isOpen && !bar.contains(e.target)) close(); });
     UI.showFlash();
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !ov.hidden) close(); if (e.key === '/' && ov.hidden && !/input|textarea|select/i.test(document.activeElement.tagName)) { e.preventDefault(); open(); } });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && isOpen) close(); if (e.key === '/' && !isOpen && !/input|textarea|select/i.test(document.activeElement.tagName)) { e.preventDefault(); open(); } });
   };
 
   // ---------- toast ----------

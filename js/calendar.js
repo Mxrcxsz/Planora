@@ -111,9 +111,9 @@
     $('main').innerHTML = '<div class="cal-main"><div class="toolbar"><div class="tb-left"><h1 class="cal-title">' + esc(title()) + '</h1>' +
       '<button type="button" class="arrow" data-act="nav" data-n="-1" aria-label="Previous">‹</button><button type="button" class="arrow" data-act="nav" data-n="1" aria-label="Next">›</button>' +
       '<button type="button" class="btn btn-secondary btn-sm" data-act="today">Today</button></div>' +
-      '<div class="seg" role="group" aria-label="View">' + [['month', 'Month'], ['week', 'Week'], ['day', 'Day']].map(function (v) {
+      '<div class="seg seg-slide" role="group" aria-label="View"><span class="seg-ind" aria-hidden="true"></span>' + [['month', 'Month'], ['week', 'Week'], ['day', 'Day']].map(function (v) {
         return '<button type="button" class="' + (st.view === v[0] ? 'on' : '') + '" data-act="view" data-v="' + v[0] + '">' + v[1] + '</button>'; }).join('') + '</div></div>' +
-      (st.view === 'month' ? month() : timeGrid()) + '</div>';
+      '<div class="cal-body">' + (st.view === 'month' ? month() : timeGrid()) + '</div></div>';
     var tb = $('tgBody'); if (tb) { tb.scrollTop = scrollTop; tb.addEventListener('scroll', function () { scrollTop = tb.scrollTop; }); }
     lastView = st.view;
   }
@@ -121,7 +121,8 @@
   // ---------- panel ----------
   function panel() {
     var el = $('panel'), show = st.panel !== 'none' && st.selected;
-    el.hidden = !show; $('layout').classList.toggle('with-panel', !!show);
+    // keep the old content while closed so the panel can slide out with it
+    el.inert = !show; $('layout').classList.toggle('with-panel', !!show);
     if (!show) return;
     var h = '<button type="button" class="close" data-act="close" aria-label="Close">×</button>';
     var e = st.panel === 'detail' && st.detailId ? P.get(st.detailId) : null;
@@ -147,10 +148,55 @@
         '<button type="button" class="btn btn-danger-soft btn-sm" data-act="del" data-id="' + e.id + '">Delete</button></div>' +
         (st.confirmDel ? '<div class="del-box"><b>Delete this event?</b><p class="small mb-2">It will be removed from your calendar and task list.</p><div class="d-flex gap-2"><button type="button" class="btn btn-secondary btn-sm" data-act="delno">Keep it</button><button type="button" class="btn btn-danger btn-sm" data-act="delyes" data-id="' + e.id + '">Delete</button></div></div>' : '');
     }
-    el.innerHTML = h;
+    el.innerHTML = '<div class="p-inner">' + h + '</div>';
   }
 
-  function render() { side(); main(); panel(); }
+  // ---------- motion ----------
+  // Everything is re-rendered via innerHTML, so CSS transitions can't see state changes.
+  // Instead, diff a snapshot of the state before/after each render and tag the fresh nodes
+  // with a one-shot animation class.
+  var prevSnap = null, segPos = null;
+  function snap() {
+    return { view: st.view, title: title(), cursor: st.cursor, month: monthOf(st.cursor), sel: st.selected,
+      open: st.panel !== 'none' && !!st.selected, pkey: st.panel + '|' + st.detailId + '|' + st.selected, f: JSON.stringify(filters()) };
+  }
+  function tag(sel, cls) { var n = document.querySelector(sel); if (n) n.classList.add(cls); return n; }
+  function placeSeg(animate) {
+    var seg = document.querySelector('.seg-slide'); if (!seg) return;
+    var on = seg.querySelector('button.on'), ind = seg.querySelector('.seg-ind');
+    var to = { x: on.offsetLeft, w: on.offsetWidth };
+    ind.style.transition = 'none';
+    if (animate && segPos) { ind.style.transform = 'translateX(' + segPos.x + 'px)'; ind.style.width = segPos.w + 'px'; void ind.offsetWidth; ind.style.transition = ''; }
+    ind.style.transform = 'translateX(' + to.x + 'px)'; ind.style.width = to.w + 'px';
+    segPos = to;
+  }
+  function animate(a, b) {
+    var dir = b.cursor > a.cursor ? 'a-next' : 'a-prev';
+    if (a.view !== b.view) { tag('.cal-body', 'a-view'); tag('.cal-title', 'a-fade'); tag('.cal-radio.on .dot', 'a-pop'); tag('.seg-slide button.on', 'a-ink'); }
+    else if (a.title !== b.title) { tag('.cal-body', dir); tag('.cal-title', 'a-fade'); }
+    if (a.month !== b.month) tag('.mini-grid', dir);
+    if (a.f !== b.f) {
+      var fa = JSON.parse(a.f), fb = JSON.parse(b.f);
+      Object.keys(fb).forEach(function (k) {
+        if (fa[k] === fb[k]) return;
+        tag('.cal-filter[data-k="' + k + '"] .box', 'a-pop');
+        if (fb[k]) { var body = document.querySelector('.cal-body'); if (body) body.dataset.reveal = k; }
+      });
+    }
+    if (b.sel && a.sel !== b.sel) { tag('.cell.sel', 'a-sel'); tag('.dn.sel', 'a-sel'); tag('.mini-day.selected', 'a-sel'); }
+    if (a.open && b.open && a.pkey !== b.pkey) tag('.p-inner', 'a-swap');
+  }
+
+  function render() {
+    side(); main(); panel();
+    var s = snap();
+    if (prevSnap) animate(prevSnap, s);
+    placeSeg(!!prevSnap && prevSnap.view !== s.view);
+    prevSnap = s;
+  }
+  // web fonts change the button widths after first paint
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { placeSeg(false); });
+  window.addEventListener('resize', function () { placeSeg(false); });
 
   // ---------- actions ----------
   function shift(n) {

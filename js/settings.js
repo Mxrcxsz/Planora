@@ -1,9 +1,9 @@
 (function () {
   var P = Planora, UI = PlUI, $ = function (id) { return document.getElementById(id); };
   if (!UI.guard()) return; UI.nav('');
-  var S = P.state.settings, SEC = [['account', 'Account'], ['notif', 'Notifications'], ['courses', 'Courses'], ['cals', 'Connected calendars']];
+  var S = P.state.settings, SEC = [['account', 'Account'], ['notif', 'Notifications'], ['courses', 'Courses'], ['cals', 'Connected calendars'], ['demo', 'Demo tools']];
   var sec = (location.hash || '#account').slice(1); if (!SEC.some(function (s) { return s[0] === sec; })) sec = 'account';
-  var pwOpen = false, delOpen = false;
+  var pwOpen = false, delOpen = false, restartOpen = false;
   var NOTES = [['email', 'Email reminders', 'Get an email the day before something\'s due'], ['conflict', 'Conflict alerts', 'Notify me right away when two deadlines clash'], ['weekly', 'Weekly summary', 'A Sunday recap of the week ahead']];
 
   function render() {
@@ -19,9 +19,7 @@
         '<div class="pcard mb-4"><div class="panel-pad"><h3>Account actions</h3></div>' +
         '<div class="field-row"><div class="field-label">Log out of Planora</div><button type="button" class="btn btn-secondary btn-sm" id="logout">Log out</button></div>' +
         '<div class="field-row"><div><div class="field-label">Delete account</div><div class="field-hint">Permanently removes your data. Can\'t be undone.</div></div><button type="button" class="btn btn-danger-soft btn-sm" id="del">Delete account</button></div>' +
-        (delOpen ? '<div class="px-4 pb-3"><div class="del-box"><b>Delete your account?</b><p class="mb-2 small">All courses, deadlines and notes will be removed for good.</p><div class="d-flex gap-2"><button type="button" class="btn btn-secondary btn-sm" id="keep">Keep my account</button><button type="button" class="btn btn-danger btn-sm" id="yes">Yes, delete it</button></div></div></div>' : '') + '</div>' +
-        '<div class="pcard"><div class="panel-pad"><h3>Prototype tools</h3></div><div class="field-row"><div><div class="field-label">Reset demo data</div><div class="field-hint">Restores the sample semester (CS301, MATH210, ENG110, HIST220).</div></div><button type="button" class="btn btn-secondary btn-sm" id="reset">Reset demo data</button></div>' +
-        '<div class="field-row"><div><div class="field-label">Start with an empty account</div><div class="field-hint">Clears everything so you can test the first-run flow.</div></div><button type="button" class="btn btn-secondary btn-sm" id="empty">Clear all data</button></div></div>';
+        (delOpen ? '<div class="px-4 pb-3"><div class="del-box"><b>Delete your account?</b><p class="mb-2 small">All courses, deadlines and notes will be removed for good.</p><div class="d-flex gap-2"><button type="button" class="btn btn-secondary btn-sm" id="keep">Keep my account</button><button type="button" class="btn btn-danger btn-sm" id="yes">Yes, delete it</button></div></div></div>' : '') + '</div>';
     } else if (sec === 'notif') {
       h = '<div class="pcard"><div class="panel-pad"><h3>Notifications</h3></div>' + NOTES.map(function (n) {
         return '<div class="field-row"><div><div class="field-label">' + n[1] + '</div><div class="field-hint">' + n[2] + '</div></div><button type="button" role="switch" aria-checked="' + !!S.notif[n[0]] + '" aria-label="' + n[1] + '" class="toggle' + (S.notif[n[0]] ? ' on' : '') + '" data-n="' + n[0] + '"><span class="knob"></span></button></div>'; }).join('') + '</div>';
@@ -30,6 +28,14 @@
       h = '<div class="pcard"><div class="panel-pad"><h3>Courses</h3></div>' + (cs.length ? cs.map(function (c) {
         return '<div class="field-row"><div><div class="field-label">' + UI.esc(c) + '</div><div class="field-hint">' + UI.esc(P.COURSE_NAMES[c] || 'Added from a syllabus') + '</div></div><button type="button" class="btn btn-danger-soft btn-sm" data-rm="' + UI.esc(c) + '">Remove</button></div>'; }).join('') : '<div class="field-row muted">No courses yet. Upload a syllabus to add one.</div>') +
         '<div class="field-row"><span></span><a class="btn btn-primary btn-sm" href="upload.html">Add a course</a></div></div>';
+    } else if (sec === 'demo') {
+      h = '<div class="demo-note mb-4"><b>How saving works in this prototype</b><p>Everything a tester does (resolving conflicts, editing, deleting, uploading) is saved and shows up across every page. ' +
+        'Changes last until this browser tab is closed. Opening Planora again starts from the original demo scenario.</p></div>' +
+        '<div class="pcard"><div class="panel-pad"><h3>Demo tools</h3><p class="muted small mb-0">For whoever is running a test session. Use these between testers.</p></div>' +
+        '<div class="field-row"><div><div class="field-label">Restart the demo from the beginning</div><div class="field-hint">Restores the original scenario, signs out and returns to the landing page, ready for the next tester.</div></div><button type="button" class="btn btn-primary btn-sm" id="restart">Restart demo</button></div>' +
+        (restartOpen ? '<div class="px-4 pb-3"><div class="del-box"><b>Restart the demo?</b><p class="mb-2 small">All changes made in this session will be discarded.</p><div class="d-flex gap-2"><button type="button" class="btn btn-secondary btn-sm" id="restartNo">Cancel</button><button type="button" class="btn btn-danger btn-sm" id="restartYes">Restart demo</button></div></div></div>' : '') +
+        '<div class="field-row"><div><div class="field-label">Reset demo data</div><div class="field-hint">Restores the sample semester (CS301, MATH210, ENG110, HIST220) but stays signed in.</div></div><button type="button" class="btn btn-secondary btn-sm" id="reset">Reset data</button></div>' +
+        '<div class="field-row"><div><div class="field-label">Start with an empty account</div><div class="field-hint">Clears everything so you can test the first-run flow.</div></div><button type="button" class="btn btn-secondary btn-sm" id="empty">Clear all data</button></div></div>';
     } else {
       h = '<div class="pcard"><div class="panel-pad"><h3>Connected calendars</h3></div>' +
         '<div class="field-row"><div><div class="field-label">Google Calendar</div><div class="field-hint">' + (S.gcal ? 'Connected as ' + UI.esc(P.state.user.email) + ' — deadlines sync both ways' : 'Not connected. Sync deadlines to your Google Calendar.') + '</div></div><button type="button" class="btn btn-sm ' + (S.gcal ? 'btn-danger-soft' : 'btn-primary') + '" id="gcal">' + (S.gcal ? 'Disconnect' : 'Connect') + '</button></div>' +
@@ -47,7 +53,9 @@
     on('saveAcc', function () { var n = $('name').value.trim(), em = $('email').value.trim(); if (!n || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { UI.toast('Add a name and a valid email'); return; } P.state.user.name = n; P.state.user.email = em; P.save(); UI.nav(''); UI.toast('Account saved'); });
     on('logout', function () { P.logout(); location.href = 'login.html'; });
     on('del', function () { delOpen = true; render(); }); on('keep', function () { delOpen = false; render(); });
-    on('yes', function () { try { localStorage.removeItem('planora.v1'); } catch (e) { /* ignore */ } location.href = 'index.html'; });
+    on('yes', function () { P.restart(); location.href = 'index.html'; });
+    on('restart', function () { restartOpen = true; render(); }); on('restartNo', function () { restartOpen = false; render(); });
+    on('restartYes', function () { P.restart(); location.href = 'index.html'; });
     on('reset', function () { P.reset('demo'); UI.flash('Demo data restored'); location.reload(); });
     on('empty', function () { P.reset('empty'); UI.flash('All data cleared. Open the dashboard for the first-run view.'); location.reload(); });
     on('gcal', function () { S.gcal = !S.gcal; P.save(); render(); UI.toast(S.gcal ? 'Google Calendar connected' : 'Google Calendar disconnected'); });

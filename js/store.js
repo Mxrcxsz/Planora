@@ -102,13 +102,17 @@
   }
 
   // ---------- persistence ----------
+  // sessionStorage, not localStorage: a tester's changes carry across pages and refreshes,
+  // but closing the tab/browser brings back the original demo scenario.
   var mem = null;
+  try { localStorage.removeItem(KEY); } catch (e) { /* ignore */ } // drop data saved by older builds
   function load() {
-    try { var r = localStorage.getItem(KEY); if (r) { var s = JSON.parse(r); if (s && s.v === 1) return s; } } catch (e) { /* ignore */ }
+    try { var r = sessionStorage.getItem(KEY); if (r) { var s = JSON.parse(r); if (s && s.v === 1) return s; } } catch (e) { /* ignore */ }
     return mem || seed('demo');
   }
   var state = load();
-  function save() { mem = state; try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* ignore */ } }
+  function save() { mem = state; try { sessionStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* ignore */ } }
+  function wipe() { mem = null; state = seed('demo'); try { sessionStorage.removeItem(KEY); } catch (e) { /* ignore */ } }
 
   // ---------- extraction pools (fake syllabus reading) ----------
   var POOLS = {
@@ -143,6 +147,8 @@
     get state() { return state; },
     save: save,
     reset: function (mode) { var u = state.user; state = seed(mode); state.user = u; save(); },
+    // back to the untouched demo, logged out, so the next page load starts the whole flow again
+    restart: wipe,
     // auth
     login: function (email) { if (state.user.account !== 'demo') { state = seed('demo'); } state.user.loggedIn = true; if (email) { state.user.email = email; } save(); },
     signup: function (first, last, email) { state = seed('empty'); state.user.account = 'new'; state.user.name = (first + ' ' + last).trim(); state.user.email = email; state.user.loggedIn = true; save(); },
@@ -164,7 +170,7 @@
         todo: TODO[type] || 'Added by you.', source: o.source || 'Added manually', status: 'verified', conflict: false, done: false, room: o.room || '', notes: o.notes || '' };
     },
     statusOf: function (e) { return e.conflict ? 'conflict' : (e.status === 'check' ? 'check' : 'verified'); },
-    badgeOf: function (e) { var s = API.statusOf(e); return s === 'conflict' ? { t: 'Conflict', c: 'danger' } : s === 'check' ? { t: 'Check this', c: 'warn' } : { t: 'Verified', c: 'ok' }; },
+    badgeOf: function (e) { var s = API.statusOf(e); return s === 'conflict' ? { t: 'Conflict', c: 'danger' } : e.tbd ? { t: 'TBD', c: 'warn' } : s === 'check' ? { t: 'Check this', c: 'warn' } : { t: 'Verified', c: 'ok' }; },
     groupOf: function (e) { return TYPE_GROUP[e.type] || 'homework'; },
     iconOf: function (e) { return ICONS[e.type] || '📌'; },
     whenOf: function (e) {
