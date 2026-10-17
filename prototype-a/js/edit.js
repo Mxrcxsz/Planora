@@ -3,17 +3,15 @@
   if (!UI.guard()) return;
   var id = UI.qs('id'), legacyFrom = UI.qs('from');
   var origin = UI.qs('origin') || (legacyFrom === 'event' ? 'calendar' : legacyFrom) || 'calendar';
-  if (['calendar', 'tasks', 'dashboard', 'review'].indexOf(origin) < 0) origin = 'calendar';
+  if (['calendar', 'tasks', 'dashboard', 'review', 'conflict'].indexOf(origin) < 0) origin = 'calendar';
   var inReview = origin === 'review', reviewMode = inReview || UI.qs('mode') === 'review', item = null;
-  UI.nav(inReview ? 'upload' : origin);
+  UI.nav(inReview ? 'upload' : origin === 'conflict' ? 'dashboard' : origin);
   if (inReview) item = (P.state.review ? P.state.review.items : []).filter(function (e) { return e.id === id; })[0];
   else item = P.get(id);
   if (!item) { $('view').innerHTML = '<h1>Deadline not found</h1><p class="muted">It may have been removed.</p><a class="btn btn-primary" href="dashboard.html">Back to dashboard</a>'; return; }
-  var back = inReview ? 'review.html' : from === 'tasks' ? 'tasks.html' : from === 'dashboard' ? 'dashboard.html' : from === 'conflict' ? 'conflict.html' : 'calendar.html?event=' + encodeURIComponent(item.id);
-  $('crumb').innerHTML = '<a href="dashboard.html">Dashboard</a> / ' + (inReview ? '<a href="review.html">Review</a>' : '<a href="calendar.html">Calendar</a>') + ' / Edit deadline';
-  var back = inReview ? 'review.html' : origin === 'tasks' ? 'tasks.html' : origin === 'dashboard' ? 'dashboard.html' : 'calendar.html?event=' + encodeURIComponent(item.id);
-  var deleteBack = inReview ? 'review.html' : origin === 'tasks' ? 'tasks.html' : origin === 'dashboard' ? 'dashboard.html' : 'calendar.html?date=' + item.date;
-  var parent = inReview ? ['review.html', 'Review'] : origin === 'tasks' ? ['tasks.html', 'Tasks'] : origin === 'dashboard' ? ['dashboard.html', 'Dashboard'] : ['calendar.html', 'Calendar'];
+  var back = inReview ? 'review.html' : origin === 'tasks' ? 'tasks.html' : origin === 'dashboard' ? 'dashboard.html' : origin === 'conflict' ? 'conflict.html' : 'calendar.html?event=' + encodeURIComponent(item.id);
+  var deleteBack = inReview ? 'review.html' : origin === 'tasks' ? 'tasks.html' : origin === 'dashboard' ? 'dashboard.html' : origin === 'conflict' ? 'conflict.html' : 'calendar.html?date=' + item.date;
+  var parent = inReview ? ['review.html', 'Review'] : origin === 'tasks' ? ['tasks.html', 'Tasks'] : origin === 'dashboard' ? ['dashboard.html', 'Dashboard'] : origin === 'conflict' ? ['conflict.html', 'Resolve conflict'] : ['calendar.html', 'Calendar'];
   $('crumb').innerHTML = '<a href="' + parent[0] + '">' + parent[1] + '</a> / Edit deadline';
   var b = P.badgeOf(item);
   var types = P.TYPE_LIST.map(function (t) { return '<option' + (t === item.type ? ' selected' : '') + '>' + t + '</option>'; }).join('');

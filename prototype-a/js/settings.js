@@ -34,9 +34,9 @@
         '<div class="pcard"><div class="panel-pad"><h3>Demo tools</h3><p class="muted small mb-0">For whoever is running a test session. Use these between testers.</p></div>' +
         '<div class="field-row"><div><div class="field-label">Restart the demo from the beginning</div><div class="field-hint">Restores the original scenario, signs out and returns to the landing page, ready for the next tester.</div></div><button type="button" class="btn btn-primary btn-sm" id="restart">Restart demo</button></div>' +
         (restartOpen ? '<div class="px-4 pb-3"><div class="del-box"><b>Restart the demo?</b><p class="mb-2 small">All changes made in this session will be discarded.</p><div class="d-flex gap-2"><button type="button" class="btn btn-secondary btn-sm" id="restartNo">Cancel</button><button type="button" class="btn btn-danger btn-sm" id="restartYes">Restart demo</button></div></div></div>' : '') +
-        '<div class="field-row"><div><div class="field-label">A/B test version</div><div class="field-hint">Switches the pages being tested. Everything else stays the same. Saved on this device, so it stays set between testers.</div>' +
-        '<ul class="ab-list"><li><b>Resolve a conflict</b> A: dates table + pending review list · B: side-by-side cards</li><li><b>Review</b> A: current list · B: <span class="faint">in progress</span></li><li><b>Task list</b> same in both</li></ul></div>' +
-        '<div class="seg-sm" role="group" aria-label="A/B test version">' + ['A', 'B'].map(function (v) { return '<button type="button" data-ab="' + v + '" class="' + (P.variant() === v ? 'active' : '') + '" aria-pressed="' + (P.variant() === v) + '">Version ' + v + '</button>'; }).join('') + '</div></div>' +
+        '<div class="field-row"><div><div class="field-label">Prototype version</div><div class="field-hint">Switch prototypes without losing the changes from this test session.</div>' +
+        '<ul class="ab-list"><li><b>Resolve a conflict</b> A: dates table + pending review list · B: side-by-side cards</li><li><b>Review and task list</b> shared in both</li></ul></div>' +
+        '<div class="seg-sm" role="group" aria-label="Prototype version">' + ['A', 'B'].map(function (v) { return '<button type="button" data-ab="' + v + '" class="' + (P.variant() === v ? 'active' : '') + '" aria-pressed="' + (P.variant() === v) + '">Prototype ' + v + '</button>'; }).join('') + '</div></div>' +
         '<div class="field-row"><div><div class="field-label">Reset demo data</div><div class="field-hint">Restores the sample semester (CS301, MATH210, ENG110, HIST220) but stays signed in.</div></div><button type="button" class="btn btn-secondary btn-sm" id="reset">Reset data</button></div>' +
         '<div class="field-row"><div><div class="field-label">Start with an empty account</div><div class="field-hint">Clears everything so you can test the first-run flow.</div></div><button type="button" class="btn btn-secondary btn-sm" id="empty">Clear all data</button></div></div>';
     } else {
@@ -59,7 +59,17 @@
     on('yes', function () { P.restart(); location.href = 'index.html'; });
     on('restart', function () { restartOpen = true; render(); }); on('restartNo', function () { restartOpen = false; render(); });
     on('restartYes', function () { P.restart(); location.href = 'index.html'; });
-    document.querySelectorAll('[data-ab]').forEach(function (b) { b.onclick = function () { P.setVariant(b.dataset.ab); render(); UI.toast('Now showing version ' + b.dataset.ab); }; });
+    document.querySelectorAll('[data-ab]').forEach(function (b) { b.onclick = function () {
+      var version = b.dataset.ab;
+      if (version === P.variant()) return;
+      var storageKey = version === 'B' ? 'planora.prototype-b.v1' : 'planora.prototype-a.v1';
+      var flashKey = version === 'B' ? 'planora.prototype-b.flash' : 'planora.prototype-a.flash';
+      try {
+        sessionStorage.setItem(storageKey, JSON.stringify(P.state));
+        sessionStorage.setItem(flashKey, 'Switched to Prototype ' + version);
+      } catch (e) { /* continue even when session storage is unavailable */ }
+      location.href = '../prototype-' + version.toLowerCase() + '/settings.html#demo';
+    }; });
     on('reset', function () { P.reset('demo'); UI.flash('Demo data restored'); location.reload(); });
     on('empty', function () { P.reset('empty'); UI.flash('All data cleared. Open the dashboard for the first-run view.'); location.reload(); });
     on('gcal', function () { S.gcal = !S.gcal; P.save(); render(); UI.toast(S.gcal ? 'Google Calendar connected' : 'Google Calendar disconnected'); });

@@ -2,8 +2,8 @@
   var P = Planora, UI = PlUI, $ = function (id) { return document.getElementById(id); };
   if (!UI.guard()) return; UI.nav('upload');
   var r = P.state.review;
-  // A/B test: this file is version A. Version B registers window.PlReviewB (from its own script, loaded before this one) and takes over.
-  if (r && P.variant() === 'B' && typeof window.PlReviewB === 'function') { window.PlReviewB(r); return; }
+  // Review is shared by both prototypes. The controlled difference is the
+  // conflict-resolution presentation, not extraction or confirmation logic.
   if (!r) { location.replace('upload.html'); return; }
   var allVerifiedShown = false;
   var citationModalEl = null, citationModal = null;

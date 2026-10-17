@@ -1,7 +1,9 @@
 /* Planora mock data store. Plain script, no build step; exposes window.Planora */
 (function () {
   'use strict';
-  var KEY = 'planora.v1';
+  // Standalone A/B entry points provide their own key so test sessions cannot
+  // leak state into one another. The production entry point keeps its old key.
+  var KEY = window.PLANORA_STORAGE_KEY || 'planora.v1';
   var TODAY = '2025-10-21'; // fixed "today" so the demo data always lines up
   var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   var MON3 = MONTHS.map(function (m) { return m.slice(0, 3); });
@@ -171,8 +173,14 @@
     // back to the untouched demo, logged out, so the next page load starts the whole flow again
     restart: wipe,
     // A/B test version. Kept in localStorage (per device), not with the demo data, so it survives Restart demo and closing the tab.
-    variant: function () { try { return localStorage.getItem('planora.variant') === 'B' ? 'B' : 'A'; } catch (e) { return 'A'; } },
-    setVariant: function (v) { try { localStorage.setItem('planora.variant', v === 'B' ? 'B' : 'A'); } catch (e) { /* ignore */ } },
+    variant: function () {
+      if (window.PLANORA_VARIANT === 'A' || window.PLANORA_VARIANT === 'B') return window.PLANORA_VARIANT;
+      try { return localStorage.getItem('planora.variant') === 'B' ? 'B' : 'A'; } catch (e) { return 'A'; }
+    },
+    setVariant: function (v) {
+      if (window.PLANORA_VARIANT === 'A' || window.PLANORA_VARIANT === 'B') return;
+      try { localStorage.setItem('planora.variant', v === 'B' ? 'B' : 'A'); } catch (e) { /* ignore */ }
+    },
     // auth
     login: function (email) { if (state.user.account !== 'demo') { state = seed('demo'); } state.user.loggedIn = true; if (email) { state.user.email = email; } save(); },
     signup: function (first, last, email) { state = seed('empty'); state.user.account = 'new'; state.user.name = (first + ' ' + last).trim(); state.user.email = email; state.user.loggedIn = true; save(); },

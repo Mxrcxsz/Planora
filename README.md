@@ -27,17 +27,23 @@ Between testers, either close the tab or use **Settings → Demo tools**:
 - **Clear all data:** an empty account, for testing the first-run flow.
 
 ### A/B testing
-**Settings → Demo tools → A/B test version** switches between Version A and Version B. Only these pages differ; the rest of the flow is identical:
+
+Use the independent participant entry points when running the experiment:
+
+- Prototype A: `/prototype-a/`
+- Prototype B: `/prototype-b/`
+
+Each participant route keeps normal navigation inside its own prototype folder and uses a separate session-storage key. The repository root contains only the public landing page; its calls-to-action enter Prototype A by default.
+
+Only the conflict-resolution presentation differs. All other pages and behavior are shared:
 
 | Page | Version A | Version B |
 |---|---|---|
-| Resolve a conflict | verified dates table + expandable *Pending dates for your review* list (`js/conflict-a.js`) | side-by-side cards (`js/conflict.js`) |
-| Review | current list | in progress (separate developer) |
+| Resolve a conflict | verified dates table + expandable *Pending dates for your review* list (`prototype-a/js/conflict.js`) | side-by-side cards (`prototype-b/js/conflict.js`) |
+| Review | shared review list | shared review list |
 | Task list | same in both | same in both |
 
-The version is saved per device in `localStorage` (`planora.variant`), so it survives *Restart demo* and closing the tab. Adding `?ab=A` or `?ab=B` to any page URL also sets it, which is handy for links sent to remote testers. In code, read it with `Planora.variant()`.
-
-**Review version B hook:** `js/review.js` is version A. Version B defines `window.PlReviewB = function (review) { … }` in its own script, loaded in `review.html` before `review.js`; when the device is on version B, `review.js` hands over to it. `review` is the pending review (`Planora.state.review`).
+Use **Settings → Demo tools → Prototype version** to switch between A and B. The switch opens the matching page in the other prototype and carries the current tab's demo state across for immediate comparison. Query parameters cannot override a prototype route. See [`docs/AB_TESTING.md`](docs/AB_TESTING.md) for ownership, test procedure, and validation details.
 
 ## Try the flows
 
@@ -58,15 +64,14 @@ The version is saved per device in `localStorage` (`planora.variant`), so it sur
 ## Structure
 
 ```
-index.html login.html signup.html          marketing + auth
-upload.html review.html edit.html          upload → review → edit a deadline
-dashboard.html calendar.html tasks.html    core app
-search.html conflict.html settings.html
+index.html                                 public landing page; defaults to Prototype A
+prototype-a/*.html                         complete Prototype A routes
+prototype-b/*.html                         complete Prototype B routes
+prototype-a/js/ prototype-b/js/            complete, independent JavaScript copies
 css/theme.css                              design tokens, Bootstrap overrides, page styles, motion
-js/store.js                                mock data, sessionStorage, activity log, fake extraction
-js/app.js                                  nav, search sweep, page transitions, toasts, add-event modal, login/signup artwork
-js/dashboard.js                            widget catalog, layouts and presets, edit mode, drag and drop
-js/<page>.js                               one script per page
+prototype-*/js/store.js                    mock data, sessionStorage, activity log, fake extraction
+prototype-*/js/app.js                      nav, transitions, toasts, forms and shared artwork
+prototype-*/js/<page>.js                   one script per page, owned by that prototype
 ```
 
-State key: `planora.v1` (in `sessionStorage`). The dashboard layout is stored in it as `ui.dashLayout`. Extraction is faked from seed data (CS301 for an empty account, PHYS101 once you already have deadlines).
+State keys: `planora.prototype-a.v1` and `planora.prototype-b.v1` (in `sessionStorage`). The dashboard layout is stored in each prototype state as `ui.dashLayout`. Extraction is faked from seed data (CS301 for an empty account, PHYS101 once you already have deadlines).

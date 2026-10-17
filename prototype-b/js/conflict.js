@@ -1,9 +1,7 @@
 (function () {
   var P = Planora, UI = PlUI, D = P.D, esc = UI.esc, $ = function (id) { return document.getElementById(id); };
-  if (!UI.guard()) return; UI.nav('dashboard');
-  // A/B test: this file is version B; version A lives in conflict-a.js
-  if (P.variant() === 'A' && typeof window.PlConflictA === 'function') { window.PlConflictA(); return; }
-  var group = P.conflicts().slice(0, 2);
+  if (!UI.guard()) return;
+  UI.nav('dashboard');
   var conflicts = P.conflicts(), target = UI.qs('id'), selected = target ? P.get(target) : conflicts[0];
   var group = selected ? [selected].concat(conflicts.filter(function (e) { return e.id !== selected.id && e.date === selected.date && (e.start || '') === (selected.start || ''); })).slice(0, 2) : [];
   var editing = null, done = null; // editing: id of the card showing the date picker; done: { title, text } once handled

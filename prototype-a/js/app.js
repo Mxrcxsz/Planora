@@ -2,6 +2,8 @@
 (function () {
   'use strict';
   var P = window.Planora, D = P.D;
+  var ASSET_BASE = window.PLANORA_ASSET_BASE || '';
+  var FLASH_KEY = window.PLANORA_FLASH_KEY || 'planora.flash';
   var UI = {};
 
   // ---------- page transitions ----------
@@ -74,7 +76,7 @@
     var t = tabs.map(function (x) { return '<a class="pl-tab' + (x[0] === active ? ' active' : '') + '" href="' + x[2] + '"' + (x[0] === active ? ' aria-current="page"' : '') + '>' + x[1] + '</a>'; }).join('');
     el.innerHTML =
       '<div class="pl-navbar app">' +
-      '<div class="wrap pl-nav"><a class="brand" href="dashboard.html"><img src="assets/planora-wordmark.png" alt="Planora"></a>' +
+      '<div class="wrap pl-nav"><a class="brand" href="dashboard.html"><img src="' + ASSET_BASE + 'assets/planora-wordmark.png" alt="Planora"></a>' +
       '<div class="pl-tabs"><span class="pl-tab-ind" aria-hidden="true"></span>' + t + '</div>' +
       '<div class="pl-right"><button type="button" class="icon-circle" id="openSearch" aria-label="Search">' + SEARCH_SVG + '</button>' +
       '<a class="avatar" href="settings.html" aria-label="Settings">' + P.initials() + '</a></div></div>' +
@@ -115,8 +117,8 @@
     setTimeout(kill, 4200);
   };
   // toast handed over from the previous page
-  UI.flash = function (msg) { try { sessionStorage.setItem('planora.flash', msg); } catch (e) { /* ignore */ } };
-  UI.showFlash = function () { try { var m = sessionStorage.getItem('planora.flash'); if (m) { sessionStorage.removeItem('planora.flash'); UI.toast(m); } } catch (e) { /* ignore */ } };
+  UI.flash = function (msg) { try { sessionStorage.setItem(FLASH_KEY, msg); } catch (e) { /* ignore */ } };
+  UI.showFlash = function () { try { var m = sessionStorage.getItem(FLASH_KEY); if (m) { sessionStorage.removeItem(FLASH_KEY); UI.toast(m); } } catch (e) { /* ignore */ } };
 
   // ---------- add / edit event modal (shared by Calendar and Review) ----------
   var modalEl = null, modal = null, cfg = null, kind = 'assignments';

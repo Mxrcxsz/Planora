@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign up — Planora</title>
+<link rel="icon" href="../assets/planora-wordmark.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="../vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
+<link href="../css/theme.css" rel="stylesheet">
+</head>
+<body>
+<header class="pl-navbar"><div class="wrap pl-nav pl-nav-center"><a class="brand" href="index.html"><img src="../assets/planora-wordmark.png" alt="Planora"></a></div></header>
+<main class="auth-stage"><aside class="auth-art auth-art-left"></aside><div class="auth-card">
+  <h1>Create your account</h1><div class="sub">Free for students. Takes about a minute.</div>
+  <form id="f" novalidate>
+    <div class="row g-3 mb-3"><div class="col-6"><label class="form-label" for="first">First name</label><input class="form-control" id="first" type="text" placeholder="Jamie" autocomplete="given-name"><div class="invalid-feedback">Add your first name.</div></div>
+    <div class="col-6"><label class="form-label" for="last">Last name</label><input class="form-control" id="last" type="text" placeholder="Lee" autocomplete="family-name"></div></div>
+    <div class="mb-3"><label class="form-label" for="email">School email</label><input class="form-control" id="email" type="email" placeholder="you@school.edu" autocomplete="email"><div class="invalid-feedback">Enter a valid email address.</div></div>
+    <div class="mb-3"><label class="form-label" for="password">Password</label><input class="form-control" id="password" type="password" placeholder="At least 8 characters" autocomplete="new-password"><div class="invalid-feedback">Use 8+ characters with a number or symbol.</div><div class="form-hint">Use 8+ characters with a number or symbol.</div></div>
+    <div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="terms"><label class="form-check-label small" for="terms">I agree to Planora's <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</label><div class="invalid-feedback">Agree to the terms to continue.</div></div>
+    <button class="btn btn-primary w-100" type="submit">Create account</button>
+  </form>
+  <div class="divider">or</div>
+  <button class="btn btn-secondary w-100" id="google" type="button">Continue with Google</button>
+  <p class="text-center muted mt-4 mb-0 small">Already have an account? <a class="fw-semibold" href="login.html">Log in</a></p>
+</div><aside class="auth-art auth-art-right"></aside></main>
+
+<script src="../vendor/bootstrap/bootstrap.bundle.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/store.js"></script>
+<script src="js/app.js"></script>
+<script src="js/signup.js"></script>
+</body>
+</html>

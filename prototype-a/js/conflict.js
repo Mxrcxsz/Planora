@@ -1,8 +1,9 @@
-/* Resolve a conflict, A/B test version A: a table of verified dates, then an expandable list of dates waiting for review
-   (clashes and uncertain dates). conflict.js (version B) hands over to this when Planora.variant() is 'A'.
-   Outcomes match version B: keep both = acknowledge the clash, keep one = the other is marked TBD. */
-window.PlConflictA = function () {
+/* Prototype A: verified dates table plus an expandable pending-review list.
+   Outcomes match Prototype B: keep both acknowledges the clash; keeping one marks the other TBD. */
+(function () {
   var P = Planora, UI = PlUI, D = P.D, esc = UI.esc, $ = function (id) { return document.getElementById(id); };
+  if (!UI.guard()) return;
+  UI.nav('dashboard');
   var open = null, choice = {};
   var body = document.querySelector('.page-body'); if (body) { body.style.maxWidth = '1148px'; body.style.paddingBottom = '20px'; }
 
@@ -96,4 +97,4 @@ window.PlConflictA = function () {
     var btn = document.querySelector('[data-confirm="' + key + '"]'); if (btn) btn.disabled = false;
   });
   render();
-};
+})();
