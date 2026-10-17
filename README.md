@@ -24,6 +24,19 @@ Between testers, either close the tab or use **Settings → Demo tools**:
 - **Reset data:** restores the sample semester but stays signed in.
 - **Clear all data:** an empty account, for testing the first-run flow.
 
+### A/B testing
+**Settings → Demo tools → A/B test version** switches between Version A and Version B. Only these pages differ; the rest of the flow is identical:
+
+| Page | Version A | Version B |
+|---|---|---|
+| Resolve a conflict | verified dates table + expandable *Pending dates for your review* list (`js/conflict-a.js`) | side-by-side cards (`js/conflict.js`) |
+| Review | current list | in progress (separate developer) |
+| Task list | same in both | same in both |
+
+The version is saved per device in `localStorage` (`planora.variant`), so it survives *Restart demo* and closing the tab. Adding `?ab=A` or `?ab=B` to any page URL also sets it, which is handy for links sent to remote testers. In code, read it with `Planora.variant()`.
+
+**Review version B hook:** `js/review.js` is version A. Version B defines `window.PlReviewB = function (review) { … }` in its own script, loaded in `review.html` before `review.js`; when the device is on version B, `review.js` hands over to it. `review` is the pending review (`Planora.state.review`).
+
 ## Try the flows
 - **Demo account:** log in with any email and the password `demo1234` (or "Continue with Google"). You get a full semester of sample data (CS301, MATH210, ENG110, HIST220). "Today" is fixed at **Tue 21 Oct 2025** so the data always lines up.
 - **First-run account:** sign up with any details. You start with no data, see the empty dashboard, then upload a syllabus (*Choose a file* or *Use a sample syllabus*) → review → add to calendar.

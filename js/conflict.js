@@ -1,6 +1,8 @@
 (function () {
   var P = Planora, UI = PlUI, D = P.D, esc = UI.esc, $ = function (id) { return document.getElementById(id); };
   if (!UI.guard()) return; UI.nav('dashboard');
+  // A/B test: this file is version B; version A lives in conflict-a.js
+  if (P.variant() === 'A' && typeof window.PlConflictA === 'function') { window.PlConflictA(); return; }
   var group = P.conflicts().slice(0, 2);
   var editing = null, done = null; // editing: id of the card showing the date picker; done: { title, text } once handled
   var WARN_SVG = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>';

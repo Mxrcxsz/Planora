@@ -6,7 +6,7 @@
   if (inReview) item = (P.state.review ? P.state.review.items : []).filter(function (e) { return e.id === id; })[0];
   else item = P.get(id);
   if (!item) { $('view').innerHTML = '<h1>Deadline not found</h1><p class="muted">It may have been removed.</p><a class="btn btn-primary" href="dashboard.html">Back to dashboard</a>'; return; }
-  var back = inReview ? 'review.html' : from === 'tasks' ? 'tasks.html' : from === 'dashboard' ? 'dashboard.html' : 'calendar.html?event=' + encodeURIComponent(item.id);
+  var back = inReview ? 'review.html' : from === 'tasks' ? 'tasks.html' : from === 'dashboard' ? 'dashboard.html' : from === 'conflict' ? 'conflict.html' : 'calendar.html?event=' + encodeURIComponent(item.id);
   $('crumb').innerHTML = '<a href="dashboard.html">Dashboard</a> / ' + (inReview ? '<a href="review.html">Review</a>' : '<a href="calendar.html">Calendar</a>') + ' / Edit deadline';
   var b = P.badgeOf(item);
   var types = P.TYPE_LIST.map(function (t) { return '<option' + (t === item.type ? ' selected' : '') + '>' + t + '</option>'; }).join('');

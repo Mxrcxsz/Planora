@@ -184,9 +184,10 @@ a.irow{color:inherit} a.irow:hover{background:var(--bg);text-decoration:none}
 .tbox.on{background:var(--accent);border-color:var(--accent)}
 .irow .row-main{display:flex;align-items:center;gap:14px;flex:1;min-width:0;color:inherit}
 .irow .row-main:hover{text-decoration:none}
-.seg-sm{display:inline-flex;background:#fff;border:1px solid var(--line);border-radius:999px;padding:3px}
+.seg-sm{display:inline-flex;background:#fff;border:1px solid var(--line);border-radius:999px;padding:3px;flex-shrink:0;white-space:nowrap}
 .seg-sm button{border:0;background:none;border-radius:999px;padding:.35rem .85rem;font-weight:600;font-size:.85rem;color:var(--muted);min-height:34px}
 .seg-sm button.active{background:var(--ink);color:#fff}
+.ab-list{list-style:none;padding:0;margin:8px 0 0;font-size:.82rem;color:var(--muted)}.ab-list li{padding:2px 0}.ab-list b{color:var(--ink);font-weight:600;margin-right:4px}
 
 /* search page */
 .search-bar{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:0 18px;height:52px;margin:40px 0 16px;box-shadow:var(--shadow)}
@@ -240,6 +241,38 @@ a.irow{color:inherit} a.irow:hover{background:var(--bg);text-decoration:none}
 .btn-neutral{--bs-btn-color:var(--ink);--bs-btn-bg:#E6E8EE;--bs-btn-border-color:#E6E8EE;--bs-btn-hover-color:var(--ink);--bs-btn-hover-bg:#D9DCE4;--bs-btn-hover-border-color:#D9DCE4;--bs-btn-active-bg:#D9DCE4;--bs-btn-active-border-color:#D9DCE4;--bs-btn-active-color:var(--ink);font-weight:700}
 .cf-done{animation:pl-rise .4s var(--ease)}
 @media(max-width:700px){.cf-grid{grid-template-columns:1fr}.cf-box{padding:18px}}
+
+/* conflict, version A (A/B test) */
+.pa-top{padding:0 0 16px}.pa-top h1{font-size:clamp(1.6rem,2.4vw,2rem)}
+@media(max-height:760px){.pa-top{padding-bottom:10px}.pa-top p{display:none}.pa-top h1{font-size:1.5rem}}
+.pa-card{background:#fff;border:1px solid var(--line);border-radius:var(--r-card);box-shadow:var(--shadow);overflow:hidden}
+.pa-cap{display:flex;align-items:center;gap:8px;padding:12px 18px;background:var(--bg);border-bottom:1px solid var(--line);font-weight:700;font-size:.85rem}
+.pa-cap span{background:#fff;border:1px solid var(--line);border-radius:999px;padding:0 8px;font-size:.75rem;color:var(--muted)}
+.pa-table{width:100%;border-collapse:collapse;font-size:.88rem}
+.pa-scroll{overflow:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.pa-scroll:focus-visible{outline-offset:-2px!important}
+.pa-table th{font-size:.75rem;font-weight:700;color:var(--muted);text-align:left;padding:10px 12px;white-space:nowrap;position:sticky;top:0;z-index:1;background:#fff;box-shadow:inset 0 -1px 0 var(--line)}
+.pa-table td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+.pa-table tbody tr:last-child td{border-bottom:0}.pa-table tbody tr{transition:background-color .15s}.pa-table tbody tr:hover{background:#FAFBFD}
+.pa-n{color:var(--muted);font-variant-numeric:tabular-nums;width:36px}
+.pa-t{font-weight:600}.pa-t.done{text-decoration:line-through;color:var(--faint)}.pa-src{font-size:.74rem;color:var(--faint)}
+.pa-edit{min-height:30px;padding:.2rem .7rem;font-size:.8rem}
+.pa-item{border-bottom:1px solid var(--line)}.pa-item:last-child{border-bottom:0}
+.pa-head{display:flex;align-items:center;gap:10px;width:100%;border:0;background:#fff;text-align:left;padding:12px 18px;font:inherit;transition:background-color .15s}
+.pa-head:hover{background:#FAFBFD}
+.pa-name{flex:1;min-width:0;font-weight:600;font-size:1.02rem}
+.pa-chev{color:var(--faint);font-size:1.3rem;line-height:1;transition:transform .25s var(--ease)}.pa-item.open .pa-chev{transform:rotate(90deg)}
+.pa-item.open{background:#FCFCFE}.pa-item.open .pa-head{background:transparent}
+.pa-body{display:flex;gap:24px;padding:0 18px 14px 64px;animation:pl-drop .25s var(--ease)}
+.pa-main{flex:1;min-width:0}
+.pa-side{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:16px}
+.pa-lbl{font-size:.82rem;color:var(--muted);margin:0 0 4px}
+.pa-with{font-weight:600;font-size:1rem}.pa-with span{display:block;font-weight:400;font-size:.84rem;color:var(--muted);margin-top:2px}
+.pa-opts{display:flex;flex-wrap:wrap;gap:8px 28px}
+.pa-opt{display:flex;align-items:center;gap:8px;font-size:.92rem;cursor:pointer}.pa-opt .form-check-input{margin:0}
+.pa-hint{font-size:.78rem;color:var(--faint);margin:8px 0 0}
+.pa-empty{text-align:center;padding:32px 18px}.pa-empty p{color:var(--muted);margin:4px 0 14px}
+@media(max-width:700px){.pa-body{flex-direction:column;padding-left:18px}.pa-side{flex-direction:row;align-items:center}}
 
 /* ===== calendar ===== */
 /* the panel column is always present (0px when closed) so its width can animate; #side carries the 20px gutter */

@@ -6,6 +6,9 @@
 
   // ---------- page transitions ----------
   // is-entering gates the CSS entrance animation to the first render; is-leaving fades <main> out before navigating.
+  // ?ab=A or ?ab=B on any page sets the A/B test version for this device
+  (function () { var v = new URLSearchParams(location.search).get('ab'); if (v === 'A' || v === 'B') P.setVariant(v); })();
+
   var root = document.documentElement, calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   root.classList.add('is-entering');
   setTimeout(function () { root.classList.remove('is-entering'); }, 1000);

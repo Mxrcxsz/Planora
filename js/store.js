@@ -157,6 +157,9 @@
     reset: function (mode) { var u = state.user; state = seed(mode); state.user = u; save(); },
     // back to the untouched demo, logged out, so the next page load starts the whole flow again
     restart: wipe,
+    // A/B test version. Kept in localStorage (per device), not with the demo data, so it survives Restart demo and closing the tab.
+    variant: function () { try { return localStorage.getItem('planora.variant') === 'B' ? 'B' : 'A'; } catch (e) { return 'A'; } },
+    setVariant: function (v) { try { localStorage.setItem('planora.variant', v === 'B' ? 'B' : 'A'); } catch (e) { /* ignore */ } },
     // auth
     login: function (email) { if (state.user.account !== 'demo') { state = seed('demo'); } state.user.loggedIn = true; if (email) { state.user.email = email; } save(); },
     signup: function (first, last, email) { state = seed('empty'); state.user.account = 'new'; state.user.name = (first + ' ' + last).trim(); state.user.email = email; state.user.loggedIn = true; save(); },
