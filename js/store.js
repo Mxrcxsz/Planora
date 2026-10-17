@@ -52,6 +52,7 @@
     var e = { id: id, date: date, start: start, dur: dur, title: title, cat: cat, course: course, type: type, weight: weight,
       todo: TODO[type] || '', source: course + '_Syllabus.pdf', status: 'verified', conflict: false, done: false, room: '', notes: '' };
     if (extra) for (var k in extra) e[k] = extra[k];
+    e.progressStatus = e.progressStatus || (e.done ? 'completed' : 'not_started');
     return e;
   }
   function seedEvents() {
@@ -142,6 +143,18 @@
   };
 
   function chipOf(it) { return it.type; }
+  function fileTypeOf(filename) {
+    var m = String(filename || '').toLowerCase().match(/\.([a-z0-9]+)$/);
+    return m ? m[1] : '';
+  }
+  function cleanCitation(c, fallbackFilename) {
+    c = c || {};
+    var filename = c.filename || fallbackFilename || '';
+    var out = { filename: filename, fileType: c.fileType || fileTypeOf(filename), page: null, slide: null, line: null, excerpt: '' };
+    ['page', 'slide', 'line'].forEach(function (key) { if (Number.isInteger(c[key]) && c[key] > 0) out[key] = c[key]; });
+    if (typeof c.excerpt === 'string' && c.excerpt.trim()) out.excerpt = c.excerpt.trim();
+    return out;
+  }
   function whenText(it) {
     var s = (it.type === 'Exam' || it.type === 'Quiz' ? '' : 'Due ') + D.short(it.date);
     if (it.type === 'Exam' && !it.start) return s;
@@ -173,7 +186,9 @@
     add: function (e) { state.events.push(e); log('Added “' + e.title + '”', 'add'); save(); return e; },
     update: function (id, patch) {
       var e = API.get(id); if (!e) return e;
-      var msg = 'done' in patch && patch.done !== e.done ? (patch.done ? ['Marked “' + e.title + '” done', 'ok'] : ['Reopened “' + e.title + '”', 'edit'])
+      var progressLabels = { not_started: 'Not Started', in_progress: 'In Progress', completed: 'Completed' };
+      var msg = 'progressStatus' in patch && patch.progressStatus !== API.progressOf(e) ? ['Set “' + e.title + '” to ' + progressLabels[patch.progressStatus], patch.progressStatus === 'completed' ? 'ok' : 'edit']
+        : 'done' in patch && patch.done !== e.done ? (patch.done ? ['Marked “' + e.title + '” done', 'ok'] : ['Reopened “' + e.title + '”', 'edit'])
         : 'conflict' in patch && e.conflict && !patch.conflict ? ['Resolved the clash on “' + e.title + '”', 'ok'] : ['Updated “' + e.title + '”', 'edit'];
       for (var k in patch) e[k] = patch[k];
       log(msg[0], msg[1]); save(); return e;
@@ -184,11 +199,42 @@
     newEvent: function (o) {
       var kind = KINDS.filter(function (k) { return k.k === o.cat; })[0] || KINDS[0];
       var type = o.type || kind.type;
+      var source = o.source || 'Added manually';
       return { id: uid(), date: o.date, start: o.start || '', dur: o.dur != null ? o.dur : (kind.k === 'exams' ? 2 : kind.k === 'timetable' ? 1 : 0),
         title: o.title, cat: o.cat, course: o.course || 'Other', type: type, weight: o.weight == null || o.weight === '' ? null : +o.weight,
-        todo: TODO[type] || 'Added by you.', source: o.source || 'Added manually', status: 'verified', conflict: false, done: false, room: o.room || '', notes: o.notes || '' };
+        todo: TODO[type] || 'Added by you.', source: source, sourceCitations: (o.sourceCitations || []).map(function (c) { return cleanCitation(c, source); }),
+        provenance: o.provenance || (source === 'Added manually' ? 'manual' : ''), status: 'verified', conflict: false, done: false, progressStatus: 'not_started', room: o.room || '', notes: o.notes || '' };
+    },
+    citationsOf: function (e) {
+      if (e.provenance === 'manual' || e.source === 'Added manually') return [];
+      var citations = Array.isArray(e.sourceCitations) ? e.sourceCitations : (e.sourceCitation ? [e.sourceCitation] : []);
+      if (!citations.length && e.source) citations = [{ filename: e.source }];
+      return citations.map(function (c) { return cleanCitation(c, e.source); }).filter(function (c) { return !!c.filename; });
+    },
+    progressOf: function (e) { return e.progressStatus || (e.done ? 'completed' : 'not_started'); },
+    setProgress: function (id, progress, syncDone) {
+      if (['not_started', 'in_progress', 'completed'].indexOf(progress) < 0) return API.get(id);
+      var patch = { progressStatus: progress };
+      if (syncDone) patch.done = progress === 'completed';
+      return API.update(id, patch);
+    },
+    // A task's Done-section placement is a page-entry snapshot. Updating progress
+    // does not move the row out from under the user; the next Tasks visit does.
+    syncTaskSections: function () {
+      var changed = false;
+      API.deadlines().forEach(function (e) {
+        var progress = API.progressOf(e), done = progress === 'completed';
+        if (e.progressStatus !== progress) { e.progressStatus = progress; changed = true; }
+        if (e.done !== done) { e.done = done; changed = true; }
+      });
+      if (changed) save();
     },
     statusOf: function (e) { return e.conflict ? 'conflict' : (e.status === 'check' ? 'check' : 'verified'); },
+    conflictKindOf: function (e) {
+      if (e.conflictType === 'schedule' || e.conflictType === 'information') return e.conflictType;
+      var clash = state.events.some(function (other) { return other.id !== e.id && other.conflict && other.date === e.date && (other.start || '') === (e.start || ''); });
+      return clash ? 'schedule' : 'information';
+    },
     badgeOf: function (e) { var s = API.statusOf(e); return s === 'conflict' ? { t: 'Conflict', c: 'danger' } : e.tbd ? { t: 'TBD', c: 'warn' } : s === 'check' ? { t: 'Check this', c: 'warn' } : { t: 'Verified', c: 'ok' }; },
     groupOf: function (e) { return TYPE_GROUP[e.type] || 'homework'; },
     iconOf: function (e) { return ICONS[e.type] || '📌'; },
@@ -209,12 +255,15 @@
     // review / fake extraction
     startExtraction: function (fileName) {
       var pool = state.events.some(function (e) { return e.cat !== 'timetable'; }) ? POOLS.PHYS101 : POOLS.CS301;
+      var sourceFile = fileName || pool.file;
       var items = pool.items.map(function (it, i) {
-        var ev = API.newEvent({ title: it.title, cat: it.type === 'Exam' || it.type === 'Quiz' ? 'exams' : 'assignments', type: it.type, course: pool.course, date: it.date, start: it.start, dur: it.dur || 0, weight: it.weight, source: fileName || pool.file });
+        var rawCitations = it.sourceCitations || (it.sourceCitation ? [it.sourceCitation] : [{ filename: sourceFile }]);
+        var ev = API.newEvent({ title: it.title, cat: it.type === 'Exam' || it.type === 'Quiz' ? 'exams' : 'assignments', type: it.type, course: pool.course, date: it.date, start: it.start, dur: it.dur || 0, weight: it.weight, source: sourceFile, sourceCitations: rawCitations, provenance: 'extracted' });
         ev.id = 'rv' + i + '-' + uid(); ev.status = it.ok ? 'verified' : 'check'; ev.note = it.note || ''; ev.sub = it.sub || '';
+        ev.extractedSnapshot = { title: ev.title, date: ev.date, start: ev.start, type: ev.type, weight: ev.weight, course: ev.course };
         return ev;
       });
-      state.review = { file: fileName || pool.file, items: items, committed: false };
+      state.review = { file: sourceFile, items: items, committed: false };
       save(); return state.review;
     },
     reviewWhen: function (e) { return e.sub ? e.sub : whenText({ type: e.type, date: e.date, start: e.start }) + (e.weight ? ' · ' + e.course + ' · ' + e.weight + '%' : ' · ' + e.course); },

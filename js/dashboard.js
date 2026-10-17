@@ -142,7 +142,7 @@
     attention: function (w, c) {
       var list = c.check.filter(c.pass).sort(byTime), shown = limit(list, w.cfg.rows);
       var rows = shown.map(function (e) {
-        return '<div class="irow"><div class="irow-icon" aria-hidden="true">' + P.iconOf(e) + '</div><div class="irow-body"><div class="irow-title">' + esc(e.title) + '</div><div class="irow-sub"><span class="chip">' + e.course + '</span>' + (e.note && /unclear|TBD/.test(e.note) ? (/TBD/.test(e.note) ? 'Listed as "TBD%"' : 'Due date unclear') : esc(P.whenOf(e))) + '</div></div><a class="pbadge warn" href="edit.html?id=' + encodeURIComponent(e.id) + '&from=dashboard">Check this</a></div>';
+        return '<div class="irow"><div class="irow-icon" aria-hidden="true">' + P.iconOf(e) + '</div><div class="irow-body"><div class="irow-title">' + esc(e.title) + '</div><div class="irow-sub"><span class="chip">' + e.course + '</span>' + (e.note && /unclear|TBD/.test(e.note) ? (/TBD/.test(e.note) ? 'Listed as "TBD%"' : 'Due date unclear') : esc(P.whenOf(e))) + '</div></div><a class="pbadge warn" href="' + UI.editHref(e, 'dashboard', 'review') + '">Check this</a></div>';
       }).join('');
       return card('Needs your attention', rows || emptyLine('Nothing needs a check. Nice.'), '', more(list.length - shown.length, 'tasks.html'));
     },

@@ -2,6 +2,7 @@
   var P = Planora, UI = PlUI, D = P.D, esc = UI.esc, $ = function (id) { return document.getElementById(id); };
   if (!UI.guard()) return; UI.nav('calendar');
   var HH = 48;
+  var PROGRESS = [['not_started', 'Not Started'], ['in_progress', 'In Progress'], ['completed', 'Completed']];
   var st = { view: 'month', cursor: P.TODAY, selected: null, panel: 'none', detailId: null, confirmDel: false, from: 'list' };
   var scrollTop = 9 * HH, lastView = '';
 
@@ -66,7 +67,7 @@
       h += '<div class="cell' + (d === st.selected ? ' sel' : '') + (d === P.TODAY ? ' today' : '') + '" role="button" tabindex="0" data-act="pick" data-date="' + d + '" aria-label="' + D.long(d) + (evs.length ? ', ' + evs.length + ' items' : '') + '">' +
         '<div class="num">' + D.parse(d).getDate() + '</div>' +
         (conflictIn(evs) ? '<a class="alert-dot" href="conflict.html" aria-label="Conflict: resolve" data-stop="1">!</a>' : '') +
-        shown.map(function (e) { return '<div class="ev"><span class="d ' + e.cat + '"></span><span class="t' + (e.done ? ' done' : '') + '">' + esc(e.title) + '</span>' + (e.weight ? '<span class="w">' + e.weight + '%</span>' : '') + '</div>'; }).join('') +
+        shown.map(function (e) { return '<div class="ev"><span class="d ' + e.cat + '"></span><span class="t' + (P.progressOf(e) === 'completed' ? ' done' : '') + '">' + esc(e.title) + '</span>' + (e.weight ? '<span class="w">' + e.weight + '%</span>' : '') + '</div>'; }).join('') +
         (evs.length > 3 ? '<div class="more">+' + (evs.length - 3) + ' more</div>' : '') + '</div>';
     }
     return '<div class="dow-row">' + ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(function (x) { return '<div class="dow">' + x + '</div>'; }).join('') + '</div><div class="grid7">' + h + '</div>';
@@ -98,7 +99,7 @@
         var wPct = 100 / it.lanes, left = it.lane * wPct;
         var time = e.dur ? D.hhmm(it.s) + '–' + D.hhmm(it.s + e.dur * 60) : 'Due ' + e.start;
         return '<button type="button" class="tg-card w-' + e.cat + '" data-act="open" data-id="' + e.id + '" style="top:' + top + 'px;height:' + ht + 'px;left:calc(' + left + '% + 2px);width:calc(' + wPct + '% - 4px)">' +
-          '<span class="t' + (e.done ? ' done' : '') + '">' + esc(e.title) + '</span><span class="s">' + time + (e.weight ? ' · ' + e.weight + '%' : '') + '</span></button>';
+          '<span class="t' + (P.progressOf(e) === 'completed' ? ' done' : '') + '">' + esc(e.title) + '</span><span class="s">' + time + (e.weight ? ' · ' + e.weight + '%' : '') + '</span></button>';
       }).join('');
       return '<div class="tg-col' + (d === P.TODAY ? ' today' : '') + '" data-date="' + d + '">' + cards + '</div>'; }).join('');
     return '<div class="tg ' + (st.view === 'day' ? 'n1' : 'n7') + '"><div class="tg-head trow"><div></div>' + head + '</div>' +
@@ -130,21 +131,22 @@
     if (st.panel === 'list') {
       var list = eventsOn(st.selected);
       h += '<div class="p-label">Details</div><div class="p-date">' + D.long(st.selected).replace(/ \d{4}$/, '') + '</div>' +
-        (list.length ? list.map(function (x) { return '<button type="button" class="p-card b-' + x.cat + '" data-act="open" data-id="' + x.id + '"><div class="t' + (x.done ? ' done' : '') + '">' + esc(x.title) + '</div><div class="s">' + esc(x.course + ' · ' + x.type + (x.start && x.dur ? ' · ' + D.hhmm(D.mins(x.start)) + '–' + D.hhmm(D.mins(x.start) + x.dur * 60) : x.start && !x.allDay ? ' · due ' + x.start : '') + (x.weight ? ' · ' + x.weight + '%' : '')) + '</div></button>'; }).join('') : '<p class="muted">Nothing planned for this day yet. Add a class, an outing or anything else you want to keep track of.</p>') +
+        (list.length ? list.map(function (x) { return '<button type="button" class="p-card b-' + x.cat + '" data-act="open" data-id="' + x.id + '"><div class="t' + (P.progressOf(x) === 'completed' ? ' done' : '') + '">' + esc(x.title) + '</div><div class="s">' + esc(x.course + ' · ' + x.type + (x.start && x.dur ? ' · ' + D.hhmm(D.mins(x.start)) + '–' + D.hhmm(D.mins(x.start) + x.dur * 60) : x.start && !x.allDay ? ' · due ' + x.start : '') + (x.weight ? ' · ' + x.weight + '%' : '')) + '</div></button>'; }).join('') : '<p class="muted">Nothing planned for this day yet. Add a class, an outing or anything else you want to keep track of.</p>') +
         '<button type="button" class="btn btn-secondary btn-sm w-100 mt-2" data-act="add" data-cat="assignments">+ Add event on this day</button>';
     } else {
       var b = P.badgeOf(e);
+      var progress = P.progressOf(e), progressOptions = PROGRESS.map(function (p) { return '<option value="' + p[0] + '"' + (progress === p[0] ? ' selected' : '') + '>' + p[1] + '</option>'; }).join('');
       h += (st.from === 'direct' ? '' : '<button type="button" class="p-back" data-act="back">‹ All items</button>') +
-        '<h2 class="fs-4 mb-2" style="padding-right:28px">' + esc(e.title) + '</h2><span class="pbadge ' + b.c + '">' + b.t + '</span>' + (e.done ? ' <span class="pbadge ok">Done</span>' : '') +
+        '<h2 class="fs-4 mb-2" style="padding-right:28px">' + esc(e.title) + '</h2><span class="pbadge ' + b.c + '">' + b.t + '</span>' + (progress === 'completed' ? ' <span class="pbadge ok">Completed</span>' : '') +
         '<div class="p-sec"><h4>Deadline</h4><div>' + D.long(e.date) + (e.start && !e.allDay ? ', ' + (e.start === '23:59' ? '11:59 PM' : D.time12(e.start)) + (e.dur ? '–' + D.time12(D.hhmm(D.mins(e.start) + e.dur * 60)) : '') : '') + '</div></div>' +
         '<div class="p-sec"><h4>What to do</h4><div>' + esc(e.todo || '—') + '</div></div>' +
         '<div class="p-sec"><h4>Details</h4><div>' + esc(e.course + ' · ' + e.type + (e.weight ? ' · Weightage: ' + e.weight + '%' : '') + (e.room ? ' · Room: ' + e.room : '')) + '</div></div>' +
         (e.notes ? '<div class="p-sec"><h4>Notes</h4><div>' + esc(e.notes) + '</div></div>' : '') +
         '<div class="p-sec"><h4>Source</h4><div class="muted">' + esc(e.source) + '</div></div>' +
+        (e.cat !== 'timetable' ? '<div class="p-sec"><label class="form-label" for="calendar-progress">Task status</label><select class="form-select form-select-sm calendar-status" id="calendar-progress" data-id="' + e.id + '">' + progressOptions + '</select></div>' : '') +
         '<div class="d-grid gap-2 mt-3">' +
         (e.conflict ? '<a class="btn btn-danger-soft btn-sm" href="conflict.html">Resolve conflict</a>' : '') +
-        (e.cat !== 'timetable' ? '<button type="button" class="btn btn-secondary btn-sm" data-act="done" data-id="' + e.id + '">' + (e.done ? 'Mark not done' : 'Mark done') + '</button>' : '') +
-        '<a class="btn btn-secondary btn-sm" href="edit.html?id=' + encodeURIComponent(e.id) + '&from=event">Edit</a>' +
+        '<a class="btn btn-secondary btn-sm" href="' + UI.editHref(e, 'calendar') + '">Edit</a>' +
         '<button type="button" class="btn btn-danger-soft btn-sm" data-act="del" data-id="' + e.id + '">Delete</button></div>' +
         (st.confirmDel ? '<div class="del-box"><b>Delete this event?</b><p class="small mb-2">It will be removed from your calendar and task list.</p><div class="d-flex gap-2"><button type="button" class="btn btn-secondary btn-sm" data-act="delno">Keep it</button><button type="button" class="btn btn-danger btn-sm" data-act="delyes" data-id="' + e.id + '">Delete</button></div></div>' : '');
     }
@@ -215,7 +217,6 @@
     open: function (t) { openEv(t.dataset.id); },
     close: function () { st.panel = 'none'; st.selected = null; st.detailId = null; st.confirmDel = false; },
     back: function () { st.panel = 'list'; st.detailId = null; st.confirmDel = false; },
-    done: function (t) { var e = P.get(t.dataset.id); P.update(e.id, { done: !e.done }); },
     del: function () { st.confirmDel = true; }, delno: function () { st.confirmDel = false; },
     delyes: function (t) { var e = P.get(t.dataset.id); P.remove(e.id); st.panel = 'list'; st.detailId = null; st.confirmDel = false; UI.toast('Deleted “' + e.title + '”'); },
     add: function (t) {
@@ -234,6 +235,10 @@
   });
   $('layout').addEventListener('keydown', function (ev) {
     if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.matches('.cell[data-act]')) { ev.preventDefault(); acts.pick(ev.target); render(); }
+  });
+  $('layout').addEventListener('change', function (ev) {
+    var select = ev.target.closest('.calendar-status'); if (!select) return;
+    P.setProgress(select.dataset.id, select.value, true); render(); UI.toast('Task status updated');
   });
   render();
 })();

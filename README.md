@@ -3,6 +3,7 @@
 A clickable, fully functional prototype of Planora: upload a syllabus, review the deadlines it finds, then manage them on a calendar, task list and customizable dashboard. Plain HTML, Bootstrap 5.3 and vanilla JS. No build step and no backend; all data is mock data kept in the browser.
 
 ## Run it
+
 Open `index.html`, or serve the folder:
 
 ```
@@ -12,6 +13,7 @@ npx serve .          # or: python3 -m http.server 8000
 Bootstrap is vendored in `vendor/bootstrap`, so it works offline. Fonts (Fraunces, Public Sans) load from Google Fonts and fall back to system fonts if blocked.
 
 ## Running a test session
+
 Everything a tester does (resolving a conflict, editing, deleting, uploading, rearranging the dashboard) is saved and shows up on every page. Data lives in `sessionStorage`, so:
 
 - Changes last across pages and refreshes **while the tab stays open**.
@@ -38,6 +40,7 @@ The version is saved per device in `localStorage` (`planora.variant`), so it sur
 **Review version B hook:** `js/review.js` is version A. Version B defines `window.PlReviewB = function (review) { … }` in its own script, loaded in `review.html` before `review.js`; when the device is on version B, `review.js` hands over to it. `review` is the pending review (`Planora.state.review`).
 
 ## Try the flows
+
 - **Demo account:** log in with any email and the password `demo1234` (or "Continue with Google"). You get a full semester of sample data (CS301, MATH210, ENG110, HIST220). "Today" is fixed at **Tue 21 Oct 2025** so the data always lines up.
 - **First-run account:** sign up with any details. You start with no data, see the empty dashboard, then upload a syllabus (*Choose a file* or *Use a sample syllabus*) → review → add to calendar.
 - **Upload errors:** a non-PDF/Word/image file, a file over 20MB, or a filename containing "scan" shows the "Couldn't read that file" state.
@@ -47,11 +50,13 @@ The version is saved per device in `localStorage` (`planora.variant`), so it sur
 - **Search:** click the search icon in the nav (or press `/`) and the search bar sweeps across the nav; Enter goes to the results page. Results can be filtered by type and time period (presets or a custom From/To range); a custom range is kept in the URL.
 
 ## Design notes
+
 - **Navbar:** the same full-width navbar on every signed-in page, with the logo centred over the sidebar column. The active tab is a sliding pill. Login and signup use a header with only the logo, centred.
 - **Login / signup:** marketing copy and decorative mini-mockups of core features (week view, syllabus extraction, conflict alert, event detail) on either side of the form. They hide below 1180px wide.
 - **Motion:** pages fade up on load and fade out on internal links; the calendar slides between periods and views; dashboard widgets animate when moved or resized. Everything respects the OS "reduce motion" setting.
 
 ## Structure
+
 ```
 index.html login.html signup.html          marketing + auth
 upload.html review.html edit.html          upload → review → edit a deadline
@@ -63,4 +68,5 @@ js/app.js                                  nav, search sweep, page transitions, 
 js/dashboard.js                            widget catalog, layouts and presets, edit mode, drag and drop
 js/<page>.js                               one script per page
 ```
+
 State key: `planora.v1` (in `sessionStorage`). The dashboard layout is stored in it as `ui.dashLayout`. Extraction is faked from seed data (CS301 for an empty account, PHYS101 once you already have deadlines).

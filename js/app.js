@@ -190,7 +190,11 @@
     if (o.href) return '<a class="irow" href="' + o.href + '">' + inner + '</a>';
     return '<div class="irow">' + inner + '</div>';
   };
-  UI.eventHref = function (e) { return P.statusOf(e) === 'conflict' ? 'conflict.html' : P.statusOf(e) === 'check' ? 'edit.html?id=' + encodeURIComponent(e.id) + '&from=event' : 'calendar.html?event=' + encodeURIComponent(e.id); };
+  UI.editHref = function (e, origin, mode) {
+    var href = 'edit.html?id=' + encodeURIComponent(e.id) + '&origin=' + encodeURIComponent(origin || 'calendar');
+    return href + (mode === 'review' ? '&mode=review' : '');
+  };
+  UI.eventHref = function (e) { return P.statusOf(e) === 'conflict' ? 'conflict.html' : P.statusOf(e) === 'check' ? UI.editHref(e, 'calendar', 'review') : 'calendar.html?event=' + encodeURIComponent(e.id); };
 
   // ---------- login / signup side artwork ----------
   // Marketing copy plus decorative mini-mockups of the core features (the mockups are aria-hidden), built from the demo scenario.
