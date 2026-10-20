@@ -146,7 +146,7 @@
         (e.cat !== 'timetable' ? '<div class="p-sec"><label class="form-label" for="calendar-progress">Task status</label><select class="form-select form-select-sm calendar-status" id="calendar-progress" data-id="' + e.id + '">' + progressOptions + '</select></div>' : '') +
         '<div class="d-grid gap-2 mt-3">' +
         (e.conflict ? '<a class="btn btn-danger-soft btn-sm" href="conflict.html">Resolve conflict</a>' : '') +
-        '<a class="btn btn-secondary btn-sm" href="' + UI.editHref(e, 'calendar') + '">Edit</a>' +
+        '<button type="button" class="btn btn-secondary btn-sm" data-act="edit" data-id="' + e.id + '">Edit</button>' +
         '<button type="button" class="btn btn-danger-soft btn-sm" data-act="del" data-id="' + e.id + '">Delete</button></div>' +
         (st.confirmDel ? '<div class="del-box"><b>Delete this event?</b><p class="small mb-2">It will be removed from your calendar and task list.</p><div class="d-flex gap-2"><button type="button" class="btn btn-secondary btn-sm" data-act="delno">Keep it</button><button type="button" class="btn btn-danger btn-sm" data-act="delyes" data-id="' + e.id + '">Delete</button></div></div>' : '');
     }
@@ -208,6 +208,18 @@
     st.panel = 'none'; st.selected = null; st.detailId = null; st.confirmDel = false;
   }
   function openEv(id) { var e = P.get(id); if (!e) return; st.cursor = st.view === 'month' ? st.cursor : e.date; st.selected = e.date; st.panel = 'detail'; st.detailId = id; st.confirmDel = false; st.from = 'list'; }
+  function editEvent(item) {
+    UI.eventForm({ heading: 'Edit event', saveLabel: 'Save changes', cat: item.cat, title: item.title, date: item.date, time: item.start,
+      course: item.course, weight: item.weight, room: item.room, notes: item.notes, source: item.source,
+      onSave: function (ev) {
+        var type = ev.cat === item.cat ? item.type : ev.type;
+        P.update(item.id, { title: ev.title, cat: ev.cat, type: type, date: ev.date, start: ev.start, allDay: ev.allDay,
+          course: ev.course, weight: ev.weight, room: ev.room, notes: ev.notes, todo: ev.cat === item.cat ? item.todo : ev.todo });
+        st.cursor = ev.date; st.selected = ev.date; st.panel = 'detail'; st.detailId = item.id; st.confirmDel = false;
+        if (!filters()[ev.cat]) { filters()[ev.cat] = true; P.save(); }
+        render(); UI.toast('Updated “' + ev.title + '”');
+      } });
+  }
   var acts = {
     pick: function (t) { var d = t.dataset.date; st.selected = d; st.cursor = d; st.panel = 'list'; st.detailId = null; st.confirmDel = false; },
     mini: function (t) { var c = D.parse(st.cursor); c.setDate(1); c.setMonth(c.getMonth() + +t.dataset.n); st.cursor = D.iso(c); },
@@ -215,6 +227,7 @@
     view: function (t) { st.view = t.dataset.v; if (st.selected) st.cursor = st.selected; },
     nav: function (t) { shift(+t.dataset.n); }, today: function () { st.cursor = P.TODAY; st.selected = P.TODAY; st.panel = 'list'; st.detailId = null; },
     open: function (t) { openEv(t.dataset.id); },
+    edit: function (t) { var item = P.get(t.dataset.id); if (item) editEvent(item); return true; },
     close: function () { st.panel = 'none'; st.selected = null; st.detailId = null; st.confirmDel = false; },
     back: function () { st.panel = 'list'; st.detailId = null; st.confirmDel = false; },
     del: function () { st.confirmDel = true; }, delno: function () { st.confirmDel = false; },

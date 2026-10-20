@@ -16,17 +16,16 @@ python3 -m http.server 8000
 
 Each participant folder contains all HTML route shells so direct page loads and refreshes work. Links remain relative and therefore stay inside the assigned prototype.
 
-## Intended experimental difference
+## Intended experimental differences
 
-The verified controlled difference is the conflict-resolution page:
+| Area | Prototype A | Prototype B |
+| --- | --- | --- |
+| Conflict resolution | Verified-dates table followed by an expandable pending-review list | Two side-by-side conflict cards with direct reschedule/TBD actions |
+| Source evidence | Compact filename and excerpt modal | PDF print-preview viewer with highlighted representative source text and extracted fields |
+| Task list | Inline row editing, separate view arrow, and the original delete control | Add-event-style edit popup, whole-card Calendar detail navigation, trash icon, and in-app deletion confirmation |
+| Calendar editing | Full-page edit route | Prefilled edit-event popup over the Calendar detail view |
 
-| Prototype A | Prototype B |
-| --- | --- |
-| Verified-dates table followed by an expandable pending-review list | Two side-by-side conflict cards with direct reschedule/TBD actions |
-| Renderer: `prototype-a/js/conflict.js` | Renderer: `prototype-b/js/conflict.js` |
-| Standalone Prototype A page script | Standalone Prototype B page script |
-
-Review, upload, calendar, tasks, dashboard, search, editing, authentication, and settings currently have equivalent copies in each prototype. Repository history contains no separate Review B renderer, despite the old README and a dormant hook claiming one was expected. Review therefore remains behaviorally identical instead of inventing an unapproved experimental treatment.
+All remaining upload, calendar, dashboard, search, authentication, and settings behavior stays equivalent unless a test brief explicitly assigns a difference to one prototype.
 
 ## File ownership
 
@@ -81,7 +80,9 @@ The application was served over local HTTP and tested in headless Chrome at desk
 - Prototype A keep-both conflict handling persists.
 - Prototype B rescheduling persists.
 - Upload-to-review confirmation works in both variants.
-- Inline task edits update the matching Calendar event in both variants.
+- Prototype A inline task edits update the matching Calendar event.
+- Prototype B popup task edits update the matching Calendar event; cards open that event's Calendar detail view and confirmed deletion removes it from both pages.
+- The PDF-style Source Evidence viewer is present only in Prototype B.
 - The root landing page links into Prototype A without referencing removed legacy routes.
 - No uncaught JavaScript exceptions, console errors, local HTTP failures, or representative mobile page overflow were observed.
 

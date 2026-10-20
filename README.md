@@ -35,13 +35,14 @@ Use the independent participant entry points when running the experiment:
 
 Each participant route keeps normal navigation inside its own prototype folder and uses a separate session-storage key. The repository root contains only the public landing page; its calls-to-action enter Prototype A by default.
 
-Only the conflict-resolution presentation differs. All other pages and behavior are shared:
+The current prototype differences are intentionally contained within each variant folder:
 
 | Page | Version A | Version B |
 |---|---|---|
 | Resolve a conflict | verified dates table + expandable *Pending dates for your review* list (`prototype-a/js/conflict.js`) | side-by-side cards (`prototype-b/js/conflict.js`) |
-| Review | shared review list | shared review list |
-| Task list | same in both | same in both |
+| Review | compact source-evidence modal | PDF print-preview evidence viewer with highlighted mock source text |
+| Task list | inline editing and separate view arrow | add-event-style edit popup, card-to-Calendar navigation, trash icon, and confirmed deletion |
+| Calendar editing | opens the full edit page | opens a prefilled event popup over the Calendar |
 
 Use **Settings → Demo tools → Prototype version** to switch between A and B. The switch opens the matching page in the other prototype and carries the current tab's demo state across for immediate comparison. Query parameters cannot override a prototype route. See [`docs/AB_TESTING.md`](docs/AB_TESTING.md) for ownership, test procedure, and validation details.
 

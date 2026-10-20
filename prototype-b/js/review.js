@@ -7,6 +7,7 @@
   if (!r) { location.replace('upload.html'); return; }
   var allVerifiedShown = false;
   var citationModalEl = null, citationModal = null;
+  var TRASH = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 10v6M14 10v6"/></svg>';
 
   function citationLocation(c) {
     var parts = [];
@@ -24,20 +25,47 @@
       return '<button type="button" class="review-citation" data-cite="' + index + '" aria-label="Inspect ' + UI.esc(text) + '" title="Inspect source evidence"><span aria-hidden="true">⌕</span><span class="citation-label">' + UI.esc(text) + '</span>' + (e.citationEdited ? '<span class="citation-edited">Edited</span>' : '') + '</button>';
     }).join('') + '</div>';
   }
+  function evidencePreview(e, c, index) {
+    var location = citationLocation(c), samplePage = ((String(e.id || '').length + index * 3) % 7) + 2;
+    var pageLabel = location || 'Page ' + samplePage;
+    var when = P.D.long(e.date) + (e.start ? ' at ' + P.D.time12(e.start) : '');
+    var weight = e.weight != null ? e.weight + '% of the final grade' : 'weight not specified';
+    var excerpt = c.excerpt || e.title + ' is due ' + when + '. This ' + e.type.toLowerCase() + ' is worth ' + weight + '.';
+    return {
+      location: pageLabel,
+      pageNumber: c.page || samplePage,
+      pageTotal: Math.max((c.page || samplePage) + 4, 9),
+      isSample: !c.excerpt,
+      heading: (e.course || 'Course') + ' · Assessment schedule',
+      excerpt: excerpt,
+      before: 'Assessment dates and submission requirements are listed below. Submit all work through the course portal unless your instructor states otherwise.',
+      after: 'Late submissions follow the policy in the course handbook. Any schedule changes will be announced during class and on the course portal.'
+    };
+  }
   function ensureCitationModal() {
     if (citationModalEl) return;
     citationModalEl = document.createElement('div');
     citationModalEl.className = 'modal fade'; citationModalEl.tabIndex = -1; citationModalEl.setAttribute('aria-labelledby', 'citationTitle'); citationModalEl.setAttribute('aria-hidden', 'true');
-    citationModalEl.innerHTML = '<div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header border-0 pb-0"><h2 class="modal-title fs-4" id="citationTitle">Source evidence</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body" id="citationBody"></div></div></div>';
+    citationModalEl.innerHTML = '<div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable citation-preview-dialog"><div class="modal-content citation-preview-content"><div class="modal-header citation-modal-header"><div><h2 class="modal-title fs-4" id="citationTitle">Source evidence</h2><p>Review the original context behind this extracted deadline.</p></div><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body citation-modal-body p-0" id="citationBody"></div></div></div>';
     document.body.appendChild(citationModalEl); citationModal = new bootstrap.Modal(citationModalEl);
   }
   function showCitation(e, index) {
     var c = P.citationsOf(e)[index]; if (!c) return;
     ensureCitationModal();
-    var location = citationLocation(c), type = c.fileType ? c.fileType.toUpperCase() : 'File';
-    $('citationBody').innerHTML = '<div class="citation-file"><span class="citation-file-icon" aria-hidden="true">📄</span><div class="min-w-0"><div class="fw-semibold text-break">' + UI.esc(c.filename) + '</div><div class="small text-secondary">' + UI.esc(type + (location ? ' · ' + location : ' · Exact location unavailable')) + '</div></div></div>' +
-      (e.citationEdited ? '<div class="source-note mt-3"><b>Edited after extraction.</b> This source supports the originally extracted information, not necessarily the current assessment details.</div>' : '') +
-      (c.excerpt ? '<div class="mt-3"><div class="form-label mb-1">Extracted source text</div><blockquote class="citation-excerpt mb-0">' + UI.esc(c.excerpt) + '</blockquote></div>' : '<p class="small text-secondary mt-3 mb-0">No source excerpt or precise location was retained. The filename is the available provenance.</p>');
+    var type = c.fileType ? c.fileType.toUpperCase() : 'File', preview = evidencePreview(e, c, index);
+    var when = P.D.long(e.date) + (e.start ? ' · ' + P.D.time12(e.start) : '');
+    $('citationBody').innerHTML = '<div class="citation-pdf-toolbar"><div class="citation-toolbar-file"><span class="citation-pdf-icon" aria-hidden="true">PDF</span><div class="min-w-0"><div class="citation-toolbar-name">' + UI.esc(c.filename) + '</div><div>' + UI.esc(type + ' document') + '</div></div></div>' +
+      '<div class="citation-toolbar-meta"><span>' + UI.esc('Page ' + preview.pageNumber + ' / ' + preview.pageTotal) + '</span><span>100%</span>' +
+      (preview.isSample ? '<span class="citation-sample-badge">Prototype preview</span>' : '') + '</div></div>' +
+      '<div class="citation-evidence-layout"><section class="citation-pdf-stage" aria-label="PDF document preview">' +
+      '<div class="citation-document"><div class="citation-document-brand">' + UI.esc(e.course || 'Course') + '</div><div class="citation-document-course">' + UI.esc(preview.heading) + '</div><p>' + UI.esc(preview.before) + '</p>' +
+      '<p class="citation-highlight"><span class="citation-match-label">Matched evidence</span>' + UI.esc(preview.excerpt) + '</p><p>' + UI.esc(preview.after) + '</p><div class="citation-page-number">' + UI.esc(preview.location) + '</div></div></section>' +
+      '<aside class="citation-details"><div class="citation-section-head"><span>Information found</span></div>' +
+      '<dl><div><dt>Assessment</dt><dd>' + UI.esc(e.title) + '</dd></div><div><dt>Due</dt><dd>' + UI.esc(when) + '</dd></div><div><dt>Course</dt><dd>' + UI.esc(e.course || 'Not specified') + '</dd></div><div><dt>Type</dt><dd>' + UI.esc(e.type) + '</dd></div>' +
+      (e.weight != null ? '<div><dt>Weight</dt><dd>' + UI.esc(e.weight + '%') + '</dd></div>' : '') + '</dl>' +
+      '<div class="citation-trust-note"><span aria-hidden="true">✓</span><div><b>Matched to this source</b><small>Planora found these details in the highlighted text.</small></div></div>' +
+      (e.citationEdited ? '<div class="source-note"><b>Edited after extraction.</b> The source supports the originally extracted information.</div>' : '') +
+      (preview.isSample ? '<p class="citation-prototype-note mb-0">Representative mock content for this prototype. The live product would display the exact uploaded PDF page.</p>' : '') + '</aside></div>';
     citationModal.show();
   }
 
@@ -49,7 +77,7 @@
         '<span class="pbadge ' + (e.status === 'check' ? 'warn' : 'ok') + '">' + (e.status === 'check' ? 'Check this' : 'Verified') + '</span>' +
         '<div class="d-flex gap-1">' + (e.status === 'check' ? '<button type="button" class="icon-btn" data-act="ok" title="Confirm" aria-label="Confirm ' + UI.esc(e.title) + '">✓</button>' : '') +
         '<a class="icon-btn" href="' + UI.editHref(e, 'review') + '" title="Edit" aria-label="Edit ' + UI.esc(e.title) + '">✎</a>' +
-        '<button type="button" class="icon-btn" data-act="rm" title="Remove" aria-label="Remove ' + UI.esc(e.title) + '">✕</button></div></div>';
+        '<button type="button" class="icon-btn" data-act="rm" title="Remove" aria-label="Remove ' + UI.esc(e.title) + '">' + TRASH + '</button></div></div>';
     }).join('');
     $('view').innerHTML =
       '<div class="head-row" style="padding-top:8px"><div><h1>Review what Planora found</h1><p>From ' + UI.esc(r.file) + ' — ' + items.length + ' dates detected. Confirm each one, or fix anything marked uncertain.</p></div></div>' +
