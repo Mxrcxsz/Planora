@@ -40,9 +40,10 @@ The current prototype differences are intentionally contained within each varian
 | Page | Version A | Version B |
 |---|---|---|
 | Resolve a conflict | verified dates table + expandable *Pending dates for your review* list (`prototype-a/js/conflict.js`) | side-by-side cards (`prototype-b/js/conflict.js`) |
-| Review | compact source-evidence modal | PDF print-preview evidence viewer with highlighted mock source text |
-| Task list | inline editing and separate view arrow | add-event-style edit popup, card-to-Calendar navigation, trash icon, and confirmed deletion |
-| Calendar editing | opens the full edit page | opens a prefilled event popup over the Calendar |
+| Review | numbered table with an Action column (`prototype-a/js/review.js`) | card list (`prototype-b/js/review.js`) |
+| Task list | single numbered table with Status, Progress and Action columns (`prototype-a/js/tasks.js`) | grouped cards (`prototype-b/js/tasks.js`) |
+
+Only the layout differs: both versions have the same features (PDF-style source evidence viewer, task edit popup, confirmed deletion, progress status, Calendar edit popup).
 
 Use **Settings → Demo tools → Prototype version** to switch between A and B. The switch opens the matching page in the other prototype and carries the current tab's demo state across for immediate comparison. Query parameters cannot override a prototype route. See [`docs/AB_TESTING.md`](docs/AB_TESTING.md) for ownership, test procedure, and validation details.
 

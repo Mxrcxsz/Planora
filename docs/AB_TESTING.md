@@ -21,9 +21,10 @@ Each participant folder contains all HTML route shells so direct page loads and 
 | Area | Prototype A | Prototype B |
 | --- | --- | --- |
 | Conflict resolution | Verified-dates table followed by an expandable pending-review list | Two side-by-side conflict cards with direct reschedule/TBD actions |
-| Source evidence | Compact filename and excerpt modal | PDF print-preview viewer with highlighted representative source text and extracted fields |
-| Task list | Inline row editing, separate view arrow, and the original delete control | Add-event-style edit popup, whole-card Calendar detail navigation, trash icon, and in-app deletion confirmation |
-| Calendar editing | Full-page edit route | Prefilled edit-event popup over the Calendar detail view |
+| Review (extraction confirmation) | Numbered table: Assignment, Module, Date, Type, Weightage, Status, Action (`prototype-a/js/review.js`) | Card list with type chip and icon actions (`prototype-b/js/review.js`) |
+| Task list | Single numbered table with Status, Progress and Edit / delete columns; group-by headings as table rows (`prototype-a/js/tasks.js`) | Grouped cards with verification icons and icon actions (`prototype-b/js/tasks.js`) |
+
+Only the layout differs. Both prototypes have the same features: the PDF-style source evidence viewer, confirm / edit / remove and *Confirm all* on Review, the add-event-style task edit popup, trash icon with confirmed deletion, progress status, group-by and status filters, and the prefilled Calendar edit popup. The Review and Task list scripts share their logic; keep feature changes in sync across both copies.
 
 All remaining upload, calendar, dashboard, search, authentication, and settings behavior stays equivalent unless a test brief explicitly assigns a difference to one prototype.
 
@@ -80,9 +81,8 @@ The application was served over local HTTP and tested in headless Chrome at desk
 - Prototype A keep-both conflict handling persists.
 - Prototype B rescheduling persists.
 - Upload-to-review confirmation works in both variants.
-- Prototype A inline task edits update the matching Calendar event.
-- Prototype B popup task edits update the matching Calendar event; cards open that event's Calendar detail view and confirmed deletion removes it from both pages.
-- The PDF-style Source Evidence viewer is present only in Prototype B.
+- In both variants, popup task edits update the matching Calendar event; task titles open that event's Calendar detail view and confirmed deletion removes it from both pages.
+- The PDF-style Source Evidence viewer opens from Review in both variants.
 - The root landing page links into Prototype A without referencing removed legacy routes.
 - No uncaught JavaScript exceptions, console errors, local HTTP failures, or representative mobile page overflow were observed.
 

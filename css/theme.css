@@ -335,6 +335,15 @@ a.verification-icon:hover{text-decoration:none;filter:brightness(.96);transform:
 .pa-n{color:var(--muted);font-variant-numeric:tabular-nums;width:36px}
 .pa-t{font-weight:600}.pa-t.done{text-decoration:line-through;color:var(--faint)}.pa-src{font-size:.74rem;color:var(--faint)}
 .pa-edit{min-height:30px;padding:.2rem .7rem;font-size:.8rem}
+/* Prototype A review + task tables */
+.pa-list-table td{padding:12px}.pa-list-table .chip{margin-right:0}
+.pa-list-table .review-citations,.pa-list-table .review-citation.manual{margin-top:3px}
+.pa-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;white-space:nowrap}
+.pa-del{width:30px;height:30px}
+.pa-title-link{color:var(--ink)}.pa-title-link:hover{color:var(--accent)}
+.pa-progress{width:132px;min-height:32px;font-size:.8rem;font-weight:600}
+.pa-group td{padding:14px 12px 6px!important;font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);background:#fff}
+.pa-list-table tbody tr.pa-group:hover{background:#fff}
 .pa-item{border-bottom:1px solid var(--line)}.pa-item:last-child{border-bottom:0}
 .pa-head{display:flex;align-items:center;gap:10px;width:100%;border:0;background:#fff;text-align:left;padding:12px 18px;font:inherit;transition:background-color .15s}
 .pa-head:hover{background:#FAFBFD}

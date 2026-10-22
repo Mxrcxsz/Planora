@@ -177,7 +177,12 @@
     document.getElementById('evSave').textContent = o.saveLabel || 'Add event';
     ['f-title', 'f-time', 'f-w', 'f-room', 'f-notes'].forEach(function (id) { document.getElementById(id).value = ''; });
     document.getElementById('f-title').classList.remove('is-invalid'); document.getElementById('f-date').classList.remove('is-invalid');
+    document.getElementById('f-title').value = o.title || '';
     document.getElementById('f-date').value = o.date || P.TODAY;
+    document.getElementById('f-time').value = o.time || '';
+    document.getElementById('f-w').value = o.weight == null ? '' : o.weight;
+    document.getElementById('f-room').value = o.room || '';
+    document.getElementById('f-notes').value = o.notes || '';
     var courses = P.courses().concat(['Other']);
     document.getElementById('f-course').innerHTML = courses.map(function (c) { return '<option>' + UI.esc(c) + '</option>'; }).join('');
     if (o.course && courses.indexOf(o.course) >= 0) document.getElementById('f-course').value = o.course;
