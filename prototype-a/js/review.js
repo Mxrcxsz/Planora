@@ -99,7 +99,7 @@
         '<button type="button" class="icon-btn" data-act="rm" title="Remove" aria-label="Remove ' + UI.esc(e.title) + '">' + TRASH + '</button></div></div>';
     }).join('');
     $('view').innerHTML =
-      '<div class="head-row" style="padding-top:8px"><div><h1>Review what Planora found</h1><p>From ' + UI.esc(r.file) + ' — ' + items.length + ' dates detected. Confirm each one, or fix anything marked uncertain.</p></div></div>' +
+      '<div class="head-row" style="padding-top:8px"><div><h1>Review what Planora found</h1><p>From ' + UI.esc(r.files && r.files.length > 1 ? r.files.map(function (f) { return f.name; }).join(', ') : r.file) + ' — ' + items.length + ' dates detected. Confirm each one, or fix anything marked uncertain.</p></div></div>' +
       '<div class="d-flex align-items-center gap-2 flex-wrap mb-3"><span class="pbadge ok">' + (items.length - warn) + ' verified</span>' +
       (warn ? '<span class="pbadge warn">' + warn + ' need a check</span><button type="button" class="btn-link-ink ms-1" id="all">Confirm all</button>' : (items.length ? '<span class="small fw-semibold" style="color:var(--ok-fg)">All verified ✓</span>' : '')) + '</div>' +
       '<div class="list" id="list">' + (rows || '<div class="irow"><div class="irow-body muted">Nothing left to review.</div></div>') + '</div>' +

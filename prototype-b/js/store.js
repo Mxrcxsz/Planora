@@ -142,8 +142,19 @@
       { title: 'Quiz 2', type: 'Quiz', date: '2025-11-11', start: '14:00', dur: 1, weight: 6, ok: true },
       { title: 'Lab report 2', type: 'Homework', date: '2025-11-17', start: '23:59', weight: 8, ok: false, sub: 'Due date unclear in source text', note: 'The lab schedule shows "Week 12" with no date. Planora estimated Nov 17.' },
       { title: 'Midterm exam', type: 'Exam', date: '2025-11-20', start: '14:00', dur: 2, weight: 25, ok: true }
-    ], course: 'PHYS101' }
+    ], course: 'PHYS101' },
+    BIO120: { file: 'BIO120_Syllabus.pdf', items: [
+      { title: 'Lab notebook check', type: 'Homework', date: '2025-10-29', start: '23:59', weight: 5, ok: true },
+      { title: 'Field trip reflection', type: 'Essay', date: '2025-11-07', start: '23:59', weight: 8, ok: true },
+      { title: 'Unit test — cells', type: 'Exam', date: '2025-11-13', start: '09:00', dur: 1.5, weight: 20, ok: false, sub: 'Time unclear in source text', note: 'The syllabus says "Week 11, in lecture" without a time. Planora used the usual lecture slot, 9:00 AM.' }
+    ], course: 'BIO120' },
+    ECON105: { file: 'ECON105_Syllabus.pdf', items: [
+      { title: 'Problem set — supply and demand', type: 'Homework', date: '2025-10-31', start: '23:59', weight: 5, ok: true },
+      { title: 'Policy brief', type: 'Essay', date: '2025-11-14', start: '23:59', weight: 15, ok: true },
+      { title: 'Quiz 3', type: 'Quiz', date: '2025-11-19', start: '16:00', dur: 1, weight: 5, ok: true }
+    ], course: 'ECON105' }
   };
+  var POOL_ORDER = ['CS301', 'PHYS101', 'BIO120', 'ECON105'];
 
   function chipOf(it) { return it.type; }
   function fileTypeOf(filename) {
@@ -262,17 +273,34 @@
     },
     conflicts: function () { return state.events.filter(function (e) { return e.conflict; }); },
     // review / fake extraction
-    startExtraction: function (fileName) {
-      var pool = state.events.some(function (e) { return e.cat !== 'timetable'; }) ? POOLS.PHYS101 : POOLS.CS301;
-      var sourceFile = fileName || pool.file;
-      var items = pool.items.map(function (it, i) {
-        var rawCitations = it.sourceCitations || (it.sourceCitation ? [it.sourceCitation] : [{ filename: sourceFile }]);
-        var ev = API.newEvent({ title: it.title, cat: it.type === 'Exam' || it.type === 'Quiz' ? 'exams' : 'assignments', type: it.type, course: pool.course, date: it.date, start: it.start, dur: it.dur || 0, weight: it.weight, source: sourceFile, sourceCitations: rawCitations, provenance: 'extracted' });
-        ev.id = 'rv' + i + '-' + uid(); ev.status = it.ok ? 'verified' : 'check'; ev.note = it.note || ''; ev.sub = it.sub || '';
-        ev.extractedSnapshot = { title: ev.title, date: ev.date, start: ev.start, type: ev.type, weight: ev.weight, course: ev.course };
-        return ev;
+    // fileNames: one name or a list of names; '' / [] uses the sample syllabus
+    startExtraction: function (fileNames) {
+      var names = (Array.isArray(fileNames) ? fileNames : [fileNames]).filter(Boolean);
+      if (!names.length) names = [''];
+      // first file gets the usual pool (CS301 on a fresh account, PHYS101 once there's data); a course code in a file name wins
+      var used = {}, first = state.events.some(function (e) { return e.cat !== 'timetable'; }) ? 'PHYS101' : 'CS301';
+      // courses already on the calendar go last so extra files don't duplicate existing deadlines
+      var have = function (k) { return state.events.some(function (e) { return e.course === k && e.cat !== 'timetable'; }); };
+      var rest = POOL_ORDER.filter(function (k) { return k !== first; });
+      var order = [first].concat(rest.filter(function (k) { return !have(k); }), rest.filter(have));
+      var picks = names.map(function (n) {
+        var hit = POOL_ORDER.filter(function (k) { return !used[k] && n.toUpperCase().indexOf(k) >= 0; })[0];
+        var key = hit || order.filter(function (k) { return !used[k]; })[0] || order[0];
+        used[key] = 1; return { name: n, pool: POOLS[key] };
       });
-      state.review = { file: sourceFile, items: items, committed: false };
+      var items = [], files = [];
+      picks.forEach(function (pk, f) {
+        var sourceFile = pk.name || pk.pool.file, count = 0;
+        pk.pool.items.forEach(function (it, i) {
+          var rawCitations = it.sourceCitations || (it.sourceCitation ? [it.sourceCitation] : [{ filename: sourceFile }]);
+          var ev = API.newEvent({ title: it.title, cat: it.type === 'Exam' || it.type === 'Quiz' ? 'exams' : 'assignments', type: it.type, course: pk.pool.course, date: it.date, start: it.start, dur: it.dur || 0, weight: it.weight, source: sourceFile, sourceCitations: rawCitations, provenance: 'extracted' });
+          ev.id = 'rv' + f + '-' + i + '-' + uid(); ev.status = it.ok ? 'verified' : 'check'; ev.note = it.note || ''; ev.sub = it.sub || '';
+          ev.extractedSnapshot = { title: ev.title, date: ev.date, start: ev.start, type: ev.type, weight: ev.weight, course: ev.course };
+          items.push(ev); count++;
+        });
+        files.push({ name: sourceFile, course: pk.pool.course, count: count });
+      });
+      state.review = { file: files.length === 1 ? files[0].name : files.length + ' files', files: files, items: items, committed: false };
       save(); return state.review;
     },
     reviewWhen: function (e) { return e.sub ? e.sub : whenText({ type: e.type, date: e.date, start: e.start }) + (e.weight ? ' · ' + e.course + ' · ' + e.weight + '%' : ' · ' + e.course); },
@@ -291,7 +319,7 @@
         });
       });
       added.forEach(function (c) { state.events.push(c); });
-      log(r.file + ' uploaded', 'up'); log(n + ' deadlines added from ' + r.file, 'ok');
+      (r.files || [{ name: r.file }]).forEach(function (f) { log(f.name + ' uploaded', 'up'); }); log(n + ' deadlines added from ' + r.file, 'ok');
       if (clashes) { state.conflictAck = false; log(clashes + ' schedule conflict' + (clashes === 1 ? '' : 's') + ' found in ' + r.file, 'del'); }
       state.review = null; save(); return n;
     }
