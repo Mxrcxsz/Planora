@@ -131,6 +131,7 @@
       { title: 'Problem Set 1', type: 'Homework', date: '2025-09-10', start: '23:59', weight: 5, ok: true },
       { title: 'Problem Set 2', type: 'Homework', date: '2025-09-24', start: '23:59', weight: 5, ok: true },
       { title: 'Midterm Exam', type: 'Exam', date: '2025-10-28', start: '10:00', dur: 2, weight: 30, ok: true },
+      { title: 'Lab quiz 3', type: 'Quiz', date: '2025-10-28', start: '10:00', dur: 1, weight: 5, ok: true },
       { title: 'Reading response — Week 6', type: 'Reading', date: '2025-10-30', start: '23:59', weight: 3, ok: false, sub: 'Due date unclear in source text', note: 'The syllabus lists this under "ongoing weekly readings" without a specific date. Planora estimated Week 6 based on the course schedule — confirm or correct it.' },
       { title: 'Group project proposal', type: 'Project', date: '2025-11-03', start: '23:59', weight: 10, ok: true },
       { title: 'Final exam', type: 'Exam', date: '2025-12-12', start: '09:00', dur: 3, weight: null, ok: false, sub: 'Weight unclear — listed as "TBD%"', note: 'The syllabus lists the weight as "TBD%". Add it once your instructor confirms.' }
@@ -138,7 +139,7 @@
     PHYS101: { file: 'PHYS101_Syllabus.pdf', items: [
       { title: 'Lab report 1', type: 'Homework', date: '2025-10-27', start: '23:59', weight: 8, ok: true },
       { title: 'Problem set — kinematics', type: 'Homework', date: '2025-10-30', start: '23:59', weight: 4, ok: true },
-      { title: 'Quiz 2', type: 'Quiz', date: '2025-11-06', start: '11:00', dur: 1, weight: 6, ok: true },
+      { title: 'Quiz 2', type: 'Quiz', date: '2025-11-11', start: '14:00', dur: 1, weight: 6, ok: true },
       { title: 'Lab report 2', type: 'Homework', date: '2025-11-17', start: '23:59', weight: 8, ok: false, sub: 'Due date unclear in source text', note: 'The lab schedule shows "Week 12" with no date. Planora estimated Nov 17.' },
       { title: 'Midterm exam', type: 'Exam', date: '2025-11-20', start: '14:00', dur: 2, weight: 25, ok: true }
     ], course: 'PHYS101' }
@@ -277,8 +278,21 @@
     reviewWhen: function (e) { return e.sub ? e.sub : whenText({ type: e.type, date: e.date, start: e.start }) + (e.weight ? ' · ' + e.course + ' · ' + e.weight + '%' : ' · ' + e.course); },
     commitReview: function () {
       var r = state.review; if (!r) return 0; var n = r.items.length;
-      r.items.forEach(function (e) { var c = JSON.parse(JSON.stringify(e)); c.id = uid(); delete c.sub; state.events.push(c); });
+      var added = r.items.map(function (e) { var c = JSON.parse(JSON.stringify(e)); c.id = uid(); delete c.sub; return c; });
+      // flag clashes: two timed items (not classes, not 11:59 PM deadlines) at the same date and start time
+      var timed = function (e) { return e.cat !== 'timetable' && e.start && e.start !== '23:59' && API.progressOf(e) !== 'completed'; };
+      var clashes = 0;
+      added.forEach(function (c) {
+        if (!timed(c)) return;
+        state.events.concat(added).forEach(function (o) {
+          if (o === c || !timed(o) || o.date !== c.date || o.start !== c.start) return;
+          if (!c.conflict) clashes++;
+          c.conflict = true; o.conflict = true;
+        });
+      });
+      added.forEach(function (c) { state.events.push(c); });
       log(r.file + ' uploaded', 'up'); log(n + ' deadlines added from ' + r.file, 'ok');
+      if (clashes) { state.conflictAck = false; log(clashes + ' schedule conflict' + (clashes === 1 ? '' : 's') + ' found in ' + r.file, 'del'); }
       state.review = null; save(); return n;
     }
   };

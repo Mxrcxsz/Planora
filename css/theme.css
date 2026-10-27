@@ -497,6 +497,8 @@ a.verification-icon:hover{text-decoration:none;filter:brightness(.96);transform:
 .tg-card{transition:box-shadow .2s,transform .2s var(--ease),filter .2s}
 .tg-card:hover{transform:translateY(-1px);box-shadow:0 6px 14px rgba(21,23,28,.12);z-index:3}
 .p-card:hover{transform:translateX(2px)}
+.p-card.p-conflict{background:var(--danger-bg);border-color:var(--danger-line);border-left-color:var(--danger-fg)}.p-card.p-conflict:hover{background:#fbdcdc}
+.p-card .p-flag{display:inline-block;margin-left:8px;vertical-align:2px;background:var(--danger-fg);color:#fff;border-radius:999px;padding:1px 8px;font-size:.66rem;font-weight:700;letter-spacing:.02em}
 .arrow:active,.mini-day:active,.mini-nav button:active,.cal-panel .close:active{transform:scale(.9)}
 .tg-now{animation:cal-fade .6s ease .3s backwards}
 @media(prefers-reduced-motion:reduce){

@@ -7,6 +7,7 @@
   if (!r) { location.replace('upload.html'); return; }
   var allVerifiedShown = false;
   var citationModalEl = null, citationModal = null;
+  var removeModalEl = null, removeModal = null, pendingRemoveId = null;
   var TRASH = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 10v6M14 10v6"/></svg>';
 
   function citationLocation(c) {
@@ -69,6 +70,24 @@
     citationModal.show();
   }
 
+  function ensureRemoveModal() {
+    if (removeModalEl) return;
+    removeModalEl = document.createElement('div'); removeModalEl.className = 'modal fade'; removeModalEl.tabIndex = -1;
+    removeModalEl.setAttribute('aria-labelledby', 'reviewRemoveTitle'); removeModalEl.setAttribute('aria-hidden', 'true');
+    removeModalEl.innerHTML = '<div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header border-0 pb-0"><h2 class="modal-title fs-4" id="reviewRemoveTitle">Remove this date?</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>' +
+      '<div class="modal-body"><p class="mb-2">“<b id="reviewRemoveName"></b>” won’t be added to your calendar or task list.</p><p class="small text-secondary mb-0">You can add it back later with “+ Add a missing date”.</p></div>' +
+      '<div class="modal-footer border-0 pt-0"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Keep date</button><button type="button" class="btn btn-danger" id="reviewRemoveConfirm">Remove date</button></div></div></div>';
+    document.body.appendChild(removeModalEl); removeModal = new bootstrap.Modal(removeModalEl);
+    $('reviewRemoveConfirm').onclick = function () {
+      var item = r.items.filter(function (i) { return i.id === pendingRemoveId; })[0]; if (!item) { removeModal.hide(); return; }
+      r.items = r.items.filter(function (i) { return i.id !== item.id; }); P.state.review.items = r.items; P.save();
+      pendingRemoveId = null; removeModal.hide(); render(); UI.toast('Removed “' + item.title + '”');
+    };
+  }
+  function confirmRemove(item) {
+    ensureRemoveModal(); pendingRemoveId = item.id; $('reviewRemoveName').textContent = item.title; removeModal.show();
+  }
+
   function render() {
     var items = r.items, warn = items.filter(function (i) { return i.status === 'check'; }).length;
     var rows = items.map(function (e, i) {
@@ -103,7 +122,7 @@
       if (cite) { var cited = r.items.filter(function (item) { return item.id === cite.closest('.irow').dataset.id; })[0]; if (cited) showCitation(cited, +cite.dataset.cite); return; }
       var b = ev.target.closest('[data-act]'); if (!b) return; var id = b.closest('.irow').dataset.id;
       if (b.dataset.act === 'ok') r.items.forEach(function (i) { if (i.id === id) i.status = 'verified'; });
-      if (b.dataset.act === 'rm') r.items = r.items.filter(function (i) { return i.id !== id; });
+      if (b.dataset.act === 'rm') { var item = r.items.filter(function (i) { return i.id === id; })[0]; if (item) confirmRemove(item); return; }
       P.state.review.items = r.items; P.save(); render();
     });
   }
