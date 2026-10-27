@@ -20,11 +20,9 @@ Each participant folder contains all HTML route shells so direct page loads and 
 
 | Area | Prototype A | Prototype B |
 | --- | --- | --- |
-| Conflict resolution | Verified-dates table followed by an expandable pending-review list | Two side-by-side conflict cards with direct reschedule/TBD actions |
-| Review (extraction confirmation) | Numbered table: Assignment, Module, Date, Type, Weightage, Status, Action (`prototype-a/js/review.js`) | Card list with type chip and icon actions (`prototype-b/js/review.js`) |
-| Task list | Single numbered table with Status, Progress and Edit / delete columns; group-by headings as table rows (`prototype-a/js/tasks.js`) | Grouped cards with verification icons and icon actions (`prototype-b/js/tasks.js`) |
+| Conflicted date on the Calendar month view | Conflicting events render as solid red strips (`.ev-conflict`, `prototype-a/js/calendar.js`); they are listed first in the cell so they are never hidden behind "+N more" | The date box background turns red (`.cell.conflict-day`, `prototype-b/js/calendar.js`) |
 
-Only the layout differs. Both prototypes have the same features: the PDF-style source evidence viewer, confirm / edit / remove and *Confirm all* on Review, the add-event-style task edit popup, trash icon with confirmed deletion, progress status, group-by and status filters, and the prefilled Calendar edit popup. The Review and Task list scripts share their logic; keep feature changes in sync across both copies.
+Both keep the red `!` badge that links to the conflict page. Everything else, including Conflict resolution (side-by-side cards), Review (card list) and Task list (grouped cards), is identical: apart from `js/config.js` and `js/calendar.js`, the two prototype folders hold the same files. Keep feature changes in sync across both copies.
 
 All remaining upload, calendar, dashboard, search, authentication, and settings behavior stays equivalent unless a test brief explicitly assigns a difference to one prototype.
 

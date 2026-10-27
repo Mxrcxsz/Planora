@@ -2,7 +2,8 @@
   var P = Planora, UI = PlUI, $ = function (id) { return document.getElementById(id); };
   if (!UI.guard()) return; UI.nav('upload');
   var r = P.state.review;
-  // Prototype A: table layout. Features and logic match prototype-b/js/review.js; only the layout differs.
+  // Review is shared by both prototypes. The controlled difference is the
+  // conflict-resolution presentation, not extraction or confirmation logic.
   if (!r) { location.replace('upload.html'); return; }
   var allVerifiedShown = false;
   var citationModalEl = null, citationModal = null;
@@ -68,34 +69,24 @@
     citationModal.show();
   }
 
-  // "9 Sep 2025", with the time (or the reason the date is uncertain) underneath
-  function tableDate(e) {
-    var d = P.D.parse(e.date), t = e.start && !e.allDay ? (e.start === '23:59' ? '11:59 PM' : P.D.time12(e.start)) : '';
-    return d.getDate() + ' ' + P.MONTHS[d.getMonth()].slice(0, 3) + ' ' + d.getFullYear() +
-      (e.sub ? '<div class="pa-src text-wrap" style="color:var(--warn-fg)">' + UI.esc(e.sub) + '</div>' : t ? '<div class="pa-src">' + t + '</div>' : '');
-  }
-
   function render() {
     var items = r.items, warn = items.filter(function (i) { return i.status === 'check'; }).length;
     var rows = items.map(function (e, i) {
-      return '<tr data-id="' + e.id + '"><td class="pa-n">' + (i + 1) + '</td>' +
-        '<td><div class="pa-t">' + UI.esc(e.title) + '</div>' + citationMarkup(e) + '</td>' +
-        '<td><span class="chip">' + UI.esc(e.course || 'Other') + '</span></td>' +
-        '<td class="text-nowrap">' + tableDate(e) + '</td><td>' + UI.esc(e.type) + '</td><td>' + (e.weight != null ? e.weight + '%' : '—') + '</td>' +
-        '<td><span class="pbadge ' + (e.status === 'check' ? 'warn' : 'ok') + '">' + (e.status === 'check' ? 'Check this' : 'Verified') + '</span></td>' +
-        '<td><div class="pa-actions">' + (e.status === 'check' ? '<button type="button" class="btn btn-secondary btn-sm pa-edit" data-act="ok" aria-label="Confirm ' + UI.esc(e.title) + '">✓ Confirm</button>' : '') +
-        '<a class="btn btn-secondary btn-sm pa-edit" href="' + UI.editHref(e, 'review') + '" aria-label="Edit ' + UI.esc(e.title) + '">Edit</a>' +
-        '<button type="button" class="icon-btn pa-del" data-act="rm" title="Remove" aria-label="Remove ' + UI.esc(e.title) + '">' + TRASH + '</button></div></td></tr>';
+      return '<div class="irow review-row" data-id="' + e.id + '"><div class="irow-icon" aria-hidden="true">' + P.iconOf(e) + '</div>' +
+        '<div class="irow-body"><div class="irow-title">' + UI.esc(e.title) + '</div><div class="irow-sub"><span class="chip">' + UI.esc(e.type) + '</span>' + UI.esc(P.reviewWhen(e)) + '</div>' + citationMarkup(e) + '</div>' +
+        '<span class="pbadge ' + (e.status === 'check' ? 'warn' : 'ok') + '">' + (e.status === 'check' ? 'Check this' : 'Verified') + '</span>' +
+        '<div class="d-flex gap-1">' + (e.status === 'check' ? '<button type="button" class="icon-btn" data-act="ok" title="Confirm" aria-label="Confirm ' + UI.esc(e.title) + '">✓</button>' : '') +
+        '<a class="icon-btn" href="' + UI.editHref(e, 'review') + '" title="Edit" aria-label="Edit ' + UI.esc(e.title) + '">✎</a>' +
+        '<button type="button" class="icon-btn" data-act="rm" title="Remove" aria-label="Remove ' + UI.esc(e.title) + '">' + TRASH + '</button></div></div>';
     }).join('');
     $('view').innerHTML =
-      '<div class="head-row pa-top" style="padding-top:8px"><div><h1>' + items.length + (items.length === 1 ? ' deadline' : ' deadlines') + ' extracted</h1><p>From ' + UI.esc(r.file) + '. Check each row' + (warn ? ' — fix anything marked “Check this” before you confirm.' : ', then confirm.') + '</p></div></div>' +
+      '<div class="head-row" style="padding-top:8px"><div><h1>Review what Planora found</h1><p>From ' + UI.esc(r.file) + ' — ' + items.length + ' dates detected. Confirm each one, or fix anything marked uncertain.</p></div></div>' +
       '<div class="d-flex align-items-center gap-2 flex-wrap mb-3"><span class="pbadge ok">' + (items.length - warn) + ' verified</span>' +
       (warn ? '<span class="pbadge warn">' + warn + ' need a check</span><button type="button" class="btn-link-ink ms-1" id="all">Confirm all</button>' : (items.length ? '<span class="small fw-semibold" style="color:var(--ok-fg)">All verified ✓</span>' : '')) + '</div>' +
-      '<div class="pa-card"><div class="pa-scroll"><table class="pa-table pa-list-table"><thead><tr><th class="pa-n"></th><th>Assignment</th><th>Module</th><th>Date</th><th>Type</th><th>Weightage</th><th>Status</th><th class="text-end">Action</th></tr></thead>' +
-      '<tbody id="list">' + (rows || '<tr><td colspan="8" class="muted text-center py-4">Nothing left to review.</td></tr>') + '</tbody></table></div></div>' +
+      '<div class="list" id="list">' + (rows || '<div class="irow"><div class="irow-body muted">Nothing left to review.</div></div>') + '</div>' +
       '<button type="button" class="add-row" id="add">+ Add a missing date</button>' +
-      '<div class="d-flex justify-content-end gap-2 mt-4"><a class="btn btn-secondary" href="upload.html" id="cancel">Cancel</a><button type="button" class="btn btn-primary px-4" id="go">' +
-      (items.length === 0 ? 'Continue' : 'Confirm') + '</button></div>';
+      '<div class="d-flex justify-content-end gap-2 mt-4"><a class="btn btn-secondary" href="upload.html" id="cancel">Cancel</a><button type="button" class="btn btn-primary" id="go">' +
+      (items.length === 0 ? 'Continue' : 'Add ' + items.length + (items.length === 1 ? ' date' : ' dates') + ' to my calendar') + '</button></div>';
     if ($('all')) $('all').onclick = function () { items.forEach(function (i) { i.status = 'verified'; }); P.save(); render(); };
     $('add').onclick = function () {
       UI.eventForm({ heading: 'Add a missing date', saveLabel: 'Add date', date: '', course: r.items[0] && r.items[0].course, source: 'Added manually',
@@ -109,8 +100,8 @@
     };
     $('list').addEventListener('click', function (ev) {
       var cite = ev.target.closest('[data-cite]');
-      if (cite) { var cited = r.items.filter(function (item) { return item.id === cite.closest('tr').dataset.id; })[0]; if (cited) showCitation(cited, +cite.dataset.cite); return; }
-      var b = ev.target.closest('[data-act]'); if (!b) return; var id = b.closest('tr').dataset.id;
+      if (cite) { var cited = r.items.filter(function (item) { return item.id === cite.closest('.irow').dataset.id; })[0]; if (cited) showCitation(cited, +cite.dataset.cite); return; }
+      var b = ev.target.closest('[data-act]'); if (!b) return; var id = b.closest('.irow').dataset.id;
       if (b.dataset.act === 'ok') r.items.forEach(function (i) { if (i.id === id) i.status = 'verified'; });
       if (b.dataset.act === 'rm') r.items = r.items.filter(function (i) { return i.id !== id; });
       P.state.review.items = r.items; P.save(); render();

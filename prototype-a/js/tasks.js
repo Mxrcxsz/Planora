@@ -1,5 +1,4 @@
 (function () {
-  // Prototype A: table layout. Features and logic match prototype-b/js/tasks.js; only the layout differs.
   var P = Planora, UI = PlUI, D = P.D, $ = function (id) { return document.getElementById(id); };
   if (!UI.guard()) return; UI.nav('tasks');
   P.syncTaskSections();
@@ -16,15 +15,16 @@
   function orderKey(l) { return l === 'Overdue' ? 0 : l.indexOf('Today') === 0 ? 1 : l.indexOf('Tomorrow') === 0 ? 2 : l === 'This week' ? 3 : l === 'Later' ? 9 : 4; }
   function verification(e) {
     var s = P.statusOf(e), kind = s === 'conflict' ? P.conflictKindOf(e) : '';
-    var b = P.badgeOf(e), tone = s === 'verified' ? 'ok' : s === 'check' ? 'warn' : 'danger';
+    var icon = s === 'verified' ? '✓' : s === 'check' ? '?' : '!';
+    var tone = s === 'verified' ? 'ok' : s === 'check' ? 'warn' : 'danger';
     var detail = s === 'verified' ? 'Verified — Deadline information has been confirmed.'
       : s === 'check' ? 'Needs Review — The date or extracted information needs confirmation.'
       : kind === 'schedule' ? 'Conflict — This deadline overlaps with another scheduled event.'
       : 'Conflict — Source information contains a different deadline detail.';
-    var attrs = ' class="pbadge ' + tone + '" data-verify data-bs-placement="top" data-bs-custom-class="verification-tooltip" data-bs-title="' + detail + '" aria-label="' + detail + '"';
-    if (s === 'verified') return '<span' + attrs + ' tabindex="0">' + b.t + '</span>';
+    var attrs = ' class="verification-icon ' + tone + '" data-bs-placement="top" data-bs-custom-class="verification-tooltip" data-bs-title="' + detail + '" aria-label="' + detail + '"';
+    if (s === 'verified') return '<span' + attrs + ' role="img" tabindex="0">' + icon + '</span>';
     var href = s === 'conflict' && kind === 'schedule' ? 'conflict.html?id=' + encodeURIComponent(e.id) : UI.editHref(e, 'tasks', 'review');
-    return '<a' + attrs + ' href="' + href + '">' + b.t + '</a>';
+    return '<a' + attrs + ' href="' + href + '">' + icon + '</a>';
   }
   function addTask() {
     UI.eventForm({ heading: 'Add a task', saveLabel: 'Add task', cat: 'assignments', date: P.TODAY, source: 'Added manually',
@@ -75,26 +75,19 @@
     var groups = {}; open.forEach(function (e) { (groups[key(e)] = groups[key(e)] || []).push(e); });
     var names = Object.keys(groups).sort(function (a, b) { return sort === 'date' ? (orderKey(a) - orderKey(b)) || a.localeCompare(b) : a.localeCompare(b); });
     var srt = function (a, b) { return (a.date + (a.start || '')).localeCompare(b.date + (b.start || '')); };
-    var n = 0;
     function row(e) {
-      var d = D.parse(e.date), t = e.start && !e.allDay ? (e.start === '23:59' ? '11:59 PM' : D.time12(e.start)) : '';
-      if (e.status === 'check' && e.note && /unclear/.test(e.note)) t = 'Due date unclear';
+      var sub = (e.date === '' ? '' : (sort === 'date' ? (e.start ? (e.start === '23:59' ? '11:59 PM' : D.time12(e.start)) : 'All day') : P.whenOf(e)));
+      if (sort === 'date' && D.diff(e.date, P.TODAY) > 1) sub = D.short(e.date) + (e.start ? ', ' + (e.start === '23:59' ? '11:59 PM' : D.time12(e.start)) : '');
+      if (e.status === 'check' && e.note && /unclear/.test(e.note)) sub = 'Due date unclear';
       var progress = P.progressOf(e), options = PROGRESS.map(function (p) { return '<option value="' + p[0] + '"' + (progress === p[0] ? ' selected' : '') + '>' + p[1] + '</option>'; }).join('');
-      return '<tr><td class="pa-n">' + (++n) + '</td>' +
-        '<td><a class="pa-t pa-title-link' + (e.done ? ' done' : '') + '" href="calendar.html?event=' + encodeURIComponent(e.id) + '">' + UI.esc(e.title) + '</a></td>' +
-        '<td><span class="chip">' + UI.esc(e.course) + '</span></td>' +
-        '<td class="text-nowrap">' + d.getDate() + ' ' + P.MONTHS[d.getMonth()].slice(0, 3) + ' ' + d.getFullYear() + (t ? '<div class="pa-src">' + UI.esc(t) + '</div>' : '') + '</td>' +
-        '<td>' + UI.esc(e.type) + '</td><td>' + (e.weight != null ? e.weight + '%' : '—') + '</td><td>' + verification(e) + '</td>' +
-        '<td><label class="sr-only" for="progress-' + e.id + '">Progress for ' + UI.esc(e.title) + '</label><select class="form-select form-select-sm task-status pa-progress" id="progress-' + e.id + '" data-id="' + e.id + '">' + options + '</select></td>' +
-        '<td><div class="pa-actions"><button type="button" class="btn btn-secondary btn-sm pa-edit task-edit" data-id="' + e.id + '" aria-label="Edit ' + UI.esc(e.title) + '">Edit</button><button type="button" class="icon-btn pa-del task-delete" data-id="' + e.id + '" title="Delete" aria-label="Delete ' + UI.esc(e.title) + '">' + TRASH + '</button></div></td></tr>';
+      return '<div class="irow task-row' + (e.done ? ' done' : '') + '"><a class="row-main" href="calendar.html?event=' + encodeURIComponent(e.id) + '"><span class="irow-icon" aria-hidden="true">' + P.iconOf(e) + '</span><span class="irow-body"><span class="irow-title d-block">' + UI.esc(e.title) + '</span><span class="irow-sub d-block"><span class="chip">' + UI.esc(e.course) + '</span>' + UI.esc(sub) + '</span></span></a>' +
+        '<div class="task-controls d-flex align-items-center gap-2">' + verification(e) + '<label class="sr-only" for="progress-' + e.id + '">Progress for ' + UI.esc(e.title) + '</label><select class="form-select form-select-sm task-status" id="progress-' + e.id + '" data-id="' + e.id + '">' + options + '</select>' +
+        '<div class="task-actions d-flex gap-1"><button type="button" class="icon-btn task-edit" data-id="' + e.id + '" title="Edit" aria-label="Edit ' + UI.esc(e.title) + '">✎</button><button type="button" class="icon-btn task-delete" data-id="' + e.id + '" title="Delete" aria-label="Delete ' + UI.esc(e.title) + '">' + TRASH + '</button></div></div></div>';
     }
-    // one table, with the group-by headings as full-width rows
-    var groupRow = function (label) { return '<tr class="pa-group"><td colspan="9">' + UI.esc(label) + '</td></tr>'; };
-    var body = names.map(function (g) { return groupRow(g) + groups[g].sort(srt).map(row).join(''); }).join('') +
-      (done.length ? groupRow('Done') + done.sort(srt).map(row).join('') : '');
-    if (body) h += '<div class="pa-card"><div class="pa-scroll"><table class="pa-table pa-list-table"><thead><tr><th class="pa-n"></th><th>Assignment</th><th>Module</th><th>Date</th><th>Type</th><th>Weightage</th><th>Status</th><th>Progress</th><th class="text-end">Action</th></tr></thead><tbody>' + body + '</tbody></table></div></div>';
+    names.forEach(function (n) { h += '<div class="group-label">' + UI.esc(n) + '</div><div class="list">' + groups[n].sort(srt).map(row).join('') + '</div>'; });
     if (!open.length && !done.length) h += '<div class="empty-state mt-3"><h2>No matching tasks</h2><p>Try another status filter.</p></div>';
     else if (!open.length && filter === 'all') h += '<div class="empty-state mt-3"><h2>You\'re all caught up</h2><p>Nothing left to do.</p></div>';
+    if (done.length) h += '<div class="group-label">Done</div><div class="list">' + done.sort(srt).map(row).join('') + '</div>';
     $('view').innerHTML = h;
     $('addTask').onclick = addTask;
     $('view').querySelectorAll('.task-status').forEach(function (select) { select.onchange = function () {
@@ -108,7 +101,7 @@
     }; });
     $('taskGroup').onchange = function () { ui.taskSort = $('taskGroup').value; P.save(); render(); };
     $('taskFilter').onchange = function () { ui.taskStatusFilter = $('taskFilter').value; P.save(); render(); };
-    $('view').querySelectorAll('[data-verify]').forEach(function (el) { tooltips.push(new bootstrap.Tooltip(el, { container: 'body' })); });
+    $('view').querySelectorAll('.verification-icon[data-bs-title]').forEach(function (el) { tooltips.push(new bootstrap.Tooltip(el, { container: 'body' })); });
   }
   window.addEventListener('pageshow', function (e) { if (e.persisted) { P.syncTaskSections(); render(); } });
   render();

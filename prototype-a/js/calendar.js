@@ -63,11 +63,11 @@
     for (var i = 0; i < rows * 7; i++) {
       var d = D.add(start, i), inM = monthOf(d) === monthOf(first);
       if (!inM) { h += '<div class="cell muted" aria-hidden="true"><div class="num">' + D.parse(d).getDate() + '</div></div>'; continue; }
-      var evs = eventsOn(d), shown = evs.slice(0, 3);
+      var evs = eventsOn(d), shown = evs.filter(function (e) { return e.conflict; }).concat(evs.filter(function (e) { return !e.conflict; })).slice(0, 3);
       h += '<div class="cell' + (d === st.selected ? ' sel' : '') + (d === P.TODAY ? ' today' : '') + '" role="button" tabindex="0" data-act="pick" data-date="' + d + '" aria-label="' + D.long(d) + (evs.length ? ', ' + evs.length + ' items' : '') + '">' +
         '<div class="num">' + D.parse(d).getDate() + '</div>' +
         (conflictIn(evs) ? '<a class="alert-dot" href="conflict.html" aria-label="Conflict: resolve" data-stop="1">!</a>' : '') +
-        shown.map(function (e) { return '<div class="ev"><span class="d ' + e.cat + '"></span><span class="t' + (P.progressOf(e) === 'completed' ? ' done' : '') + '">' + esc(e.title) + '</span>' + (e.weight ? '<span class="w">' + e.weight + '%</span>' : '') + '</div>'; }).join('') +
+        shown.map(function (e) { return '<div class="ev' + (e.conflict ? ' ev-conflict' : '') + '"><span class="d ' + e.cat + '"></span><span class="t' + (P.progressOf(e) === 'completed' ? ' done' : '') + '">' + esc(e.title) + '</span>' + (e.weight ? '<span class="w">' + e.weight + '%</span>' : '') + '</div>'; }).join('') +
         (evs.length > 3 ? '<div class="more">+' + (evs.length - 3) + ' more</div>' : '') + '</div>';
     }
     return '<div class="dow-row">' + ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(function (x) { return '<div class="dow">' + x + '</div>'; }).join('') + '</div><div class="grid7">' + h + '</div>';
