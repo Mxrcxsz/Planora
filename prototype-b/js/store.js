@@ -146,6 +146,7 @@
     BIO120: { file: 'BIO120_Syllabus.pdf', items: [
       { title: 'Lab notebook check', type: 'Homework', date: '2025-10-29', start: '23:59', weight: 5, ok: true },
       { title: 'Field trip reflection', type: 'Essay', date: '2025-11-07', start: '23:59', weight: 8, ok: true },
+      { title: 'Quiz 1 — microscopy', type: 'Quiz', date: '2025-11-05', start: '11:00', dur: 1, weight: 4, ok: true },
       { title: 'Unit test — cells', type: 'Exam', date: '2025-11-13', start: '09:00', dur: 1.5, weight: 20, ok: false, sub: 'Time unclear in source text', note: 'The syllabus says "Week 11, in lecture" without a time. Planora used the usual lecture slot, 9:00 AM.' }
     ], course: 'BIO120' },
     ECON105: { file: 'ECON105_Syllabus.pdf', items: [
@@ -174,6 +175,32 @@
     if (it.type === 'Exam' && !it.start) return s;
     if (it.start && it.start !== '23:59') s += ', ' + D.time12(it.start); else if (it.start === '23:59') s += ', 11:59 PM';
     return s;
+  }
+
+  // A/B sessions start on the demo account, so every upload must produce a schedule conflict.
+  // If no extracted item already shares a date and start time with an upcoming timed event (or another
+  // item in the batch), move one extracted quiz/exam onto the best upcoming slot.
+  function ensureClash(items) {
+    var timed = function (e) { return e.cat !== 'timetable' && e.start && e.start !== '23:59' && API.progressOf(e) !== 'completed'; };
+    var mine = items.filter(timed), pool = state.events.filter(function (e) { return timed(e) && e.date >= TODAY; }).concat(mine);
+    var clashes = mine.some(function (it) { return pool.some(function (o) { return o !== it && o.date === it.date && o.start === it.start; }); });
+    if (clashes) return;
+    var upcoming = state.events.filter(function (e) { return timed(e) && e.date >= TODAY; });
+    var shared = function (e) { return upcoming.some(function (o) { return o !== e && o.date === e.date && o.start === e.start; }) ? 1 : 0; };
+    // prefer a slot holding just one event (the conflict page compares two), then exams, then the soonest
+    var targets = upcoming.sort(function (a, b) {
+      return shared(a) - shared(b) || (a.conflict ? 1 : 0) - (b.conflict ? 1 : 0) || (a.cat === 'exams' ? 0 : 1) - (b.cat === 'exams' ? 0 : 1) || (a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+    });
+    var pick = function (list) { return list.filter(function (e) { return e.cat === 'exams' && e.status !== 'check'; })[0] || list.filter(function (e) { return e.cat === 'exams'; })[0] || list[0]; };
+    var mover = pick(mine.length ? mine : items), target = targets[0];
+    if (!mover) return;
+    if (!target) target = items.filter(function (e) { return e !== mover; })[0]; // empty calendar: clash inside the batch
+    if (!target) return;
+    mover.date = target.date; mover.start = target.start && target.start !== '23:59' ? target.start : '10:00';
+    if (!target.start || target.start === '23:59') { target.start = mover.start; if (!target.dur) target.dur = 1; }
+    if (!mover.dur) mover.dur = 1;
+    if (mover.extractedSnapshot) { mover.extractedSnapshot.date = mover.date; mover.extractedSnapshot.start = mover.start; }
+    if (target.extractedSnapshot) target.extractedSnapshot.start = target.start;
   }
 
   var API = {
@@ -281,8 +308,8 @@
       var used = {}, first = state.events.some(function (e) { return e.cat !== 'timetable'; }) ? 'PHYS101' : 'CS301';
       // courses already on the calendar go last so extra files don't duplicate existing deadlines
       var have = function (k) { return state.events.some(function (e) { return e.course === k && e.cat !== 'timetable'; }); };
-      var rest = POOL_ORDER.filter(function (k) { return k !== first; });
-      var order = [first].concat(rest.filter(function (k) { return !have(k); }), rest.filter(have));
+      var all = [first].concat(POOL_ORDER.filter(function (k) { return k !== first; }));
+      var order = all.filter(function (k) { return !have(k); }).concat(all.filter(have));
       var picks = names.map(function (n) {
         var hit = POOL_ORDER.filter(function (k) { return !used[k] && n.toUpperCase().indexOf(k) >= 0; })[0];
         var key = hit || order.filter(function (k) { return !used[k]; })[0] || order[0];
@@ -300,6 +327,7 @@
         });
         files.push({ name: sourceFile, course: pk.pool.course, count: count });
       });
+      ensureClash(items);
       state.review = { file: files.length === 1 ? files[0].name : files.length + ' files', files: files, items: items, committed: false };
       save(); return state.review;
     },
