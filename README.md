@@ -39,9 +39,9 @@ The prototypes are identical except for one intentionally contained difference:
 
 | Page | Version A | Version B |
 |---|---|---|
-| Calendar (month view): conflicting date | the clashing events are shown as solid red strips (`prototype-a/js/calendar.js`) | the whole date box gets a red background (`prototype-b/js/calendar.js`) |
+| Review extracted deadlines | syllabus source side by side: PDF-style viewer next to a numbered list (`prototype-a/js/review.js`) | card list with a Source evidence modal per row (`prototype-b/js/review.js`) |
 
-Conflict resolution, Review and the Task list use the same layout in both (side-by-side conflict cards, card list, grouped cards).
+Both Review pages share the same mock deadlines, conflict detection, Edit modal and "Resolve now / Review later" pop-up (`js/review-core.js`), and ignore what was uploaded. Calendar, Conflict resolution and the Task list use the same layout in both (red date box on conflicted days, side-by-side conflict cards, grouped cards).
 
 Use **Settings → Demo tools → Prototype version** to switch between A and B. The switch opens the matching page in the other prototype and carries the current tab's demo state across for immediate comparison. Query parameters cannot override a prototype route. See [`docs/AB_TESTING.md`](docs/AB_TESTING.md) for ownership, test procedure, and validation details.
 
@@ -49,9 +49,9 @@ Use **Settings → Demo tools → Prototype version** to switch between A and B.
 
 - **Demo account:** log in with any email and the password `demo1234` (or "Continue with Google"). You get a full semester of sample data (CS301, MATH210, ENG110, HIST220). "Today" is fixed at **Tue 21 Oct 2025** so the data always lines up.
 - **First-run account:** sign up with any details. You start with no data, see the empty dashboard, then upload a syllabus (*Choose a file* or *Use a sample syllabus*) → review → add to calendar.
-- **Multiple files:** pick or drop up to 5 syllabi at once; they're read together and land in one Review list, with each date citing its own file. Each file gets a different sample course (CS301, PHYS101, BIO120, ECON105; a course code in the file name picks that course).
+- **Upload (mock):** choosing files, dropping them or *Use a sample syllabus* always "finds" the same 6 deadlines from the demo semester's syllabi (CS301, MATH210, ENG110, HIST220; defined in `js/review-core.js`), including the 28 Oct clash. File names only change the heading. Up to 5 files at a time.
 - **Upload errors:** a non-PDF/Word/image file, a file over 20MB, or a filename containing "scan" shows the "Couldn't read that file" state.
-- **Conflict:** the demo data has one (CS301 Midterm vs MATH210 pop quiz, 28 Oct, 10:00). **Every upload adds a new conflict**, so A/B testers who start signed in always meet one: if nothing in the batch naturally clashes (the first demo upload does: PHYS101 Quiz 2 vs HIST220 Map quiz, 11 Nov, 14:00), one extracted quiz or exam is moved onto the slot of an upcoming exam that has nothing else booked; on an empty calendar two items in the same upload clash instead. Single uploads rotate through courses not yet on the calendar (PHYS101 → BIO120 → ECON105 → CS301) before repeating one. Any upload whose timed items share a date and start time with another timed item gets flagged. Conflicting events are highlighted red in the calendar day panel in both versions. Open it from the dashboard banner, a calendar day or Tasks. Each item can be moved to a new date or marked TBD; you can also keep both (acknowledge the clash) or review later.
+- **Conflict:** the demo data has one (CS301 Midterm vs MATH210 pop quiz, 28 Oct, 10:00), and every upload shows it again on the Review page (two courses on the same date count as a clash). Confirming uses the same ids as the preloaded events, so it updates them in place instead of adding copies: on the demo account the calendar stays the same size, and after *Clear all data* the upload adds exactly those 6 deadlines. If the tester moves one of them on the Review page, the clash is cleared on the calendar too. Open the conflict from the dashboard banner, a calendar day or Tasks; each item can be moved to a new date or marked TBD, or you can keep both or review later.
 - **Dashboard:** click **Customize** to edit the layout. Drag widgets from the left panel onto the dashboard (or click to add), drag to reorder, drag back to the panel or use the trash icon to remove, pick a size (S/M/L/XL/Full), and use the gear for options such as time range, course, type and rows shown. Presets: Compact, Focused, Full detail. *Save layout* keeps it; *Cancel* discards; *Reset to default* restores the original layout.
 - **Calendar:** Month / Week / Day views, filters, mini calendar, Create menu (Event, Exam, Import course schedule), a day panel that slides in, and event detail with edit / mark done / delete. Week and Day show a 00:00–23:00 time grid that opens scrolled to 09:00.
 - **Search:** click the search icon in the nav (or press `/`) and the search bar sweeps across the nav; Enter goes to the results page. Results can be filtered by type and time period (presets or a custom From/To range); a custom range is kept in the URL.
@@ -75,4 +75,4 @@ prototype-*/js/app.js                      nav, transitions, toasts, forms and s
 prototype-*/js/<page>.js                   one script per page, owned by that prototype
 ```
 
-State keys: `planora.prototype-a.v1` and `planora.prototype-b.v1` (in `sessionStorage`). The dashboard layout is stored in each prototype state as `ui.dashLayout`. Extraction is faked from seed data (CS301 for an empty account, PHYS101 once you already have deadlines).
+State keys: `planora.prototype-a.v1` and `planora.prototype-b.v1` (in `sessionStorage`). The dashboard layout is stored in each prototype state as `ui.dashLayout`. Uploads are faked: `js/review-core.js` holds the mock deadlines the Upload and Review pages show.

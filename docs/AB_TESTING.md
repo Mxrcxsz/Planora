@@ -20,9 +20,9 @@ Each participant folder contains all HTML route shells so direct page loads and 
 
 | Area | Prototype A | Prototype B |
 | --- | --- | --- |
-| Conflicted date on the Calendar month view | Conflicting events render as solid red strips (`.ev-conflict`, `prototype-a/js/calendar.js`); they are listed first in the cell so they are never hidden behind "+N more" | The date box background turns red (`.cell.conflict-day`, `prototype-b/js/calendar.js`) |
+| Review extracted deadlines (`review.html`) | Syllabus source side by side: a PDF-style viewer of the selected deadline's page next to a numbered list (`prototype-a/js/review.js`, `css/review-source.css`) | The card list with a Source evidence modal per row (`prototype-b/js/review.js`) |
 
-Both keep the red `!` badge that links to the conflict page. Everything else, including Conflict resolution (side-by-side cards), Review (card list) and Task list (grouped cards), is identical: apart from `js/config.js` and `js/calendar.js`, the two prototype folders hold the same files. Keep feature changes in sync across both copies.
+Only the layout differs. Both review pages use the same 6 mock deadlines (the demo semester's own, with matching ids), conflict rule (different courses on the same date), Edit modal, "Resolve now / Review later" pop-up and Calendar hand-off from `js/review-core.js`, which is identical in both folders. Confirmed deadlines reach the Calendar through `localStorage` (`planora.prototype-a.confirmed` / `planora.prototype-b.confirmed`, set in each `js/config.js`); `store.js` imports them into the session once and then deletes the key. The Review page ignores what was uploaded, so every tester reviews the same list with 2 clashes on 28 Oct. Confirming updates the matching preloaded events by id rather than adding copies, so repeated uploads never grow the calendar. Everything else, including the Calendar (red date box on conflicted days), Conflict resolution (side-by-side cards) and Task list (grouped cards), is identical: apart from `js/config.js`, `js/review.js` and `review.html`, the two prototype folders hold the same files.
 
 All remaining upload, calendar, dashboard, search, authentication, and settings behavior stays equivalent unless a test brief explicitly assigns a difference to one prototype.
 

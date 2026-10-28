@@ -18,10 +18,37 @@
   <div id="view"></div>
 </div></main>
 
+
+<!-- Edit deadline -->
+<div class="modal fade" id="rvsEditModal" tabindex="-1" aria-labelledby="rvsEditTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered"><form class="modal-content" id="rvsEditForm" novalidate>
+    <div class="modal-header border-0 pb-0"><h2 class="modal-title fs-4" id="rvsEditTitle">Edit deadline</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+    <div class="modal-body">
+      <div class="mb-3"><label class="form-label" for="rvsFTitle">Title</label><input class="form-control" id="rvsFTitle" required><div class="invalid-feedback">Give the deadline a title.</div></div>
+      <div class="row g-3">
+        <div class="col-sm-6"><label class="form-label" for="rvsFDate">Date</label><input class="form-control" type="date" id="rvsFDate" required><div class="invalid-feedback">Pick a date.</div></div>
+        <div class="col-sm-6"><label class="form-label" for="rvsFType">Type</label><select class="form-select" id="rvsFType"></select></div>
+        <div class="col-sm-6"><label class="form-label" for="rvsFWeight">Weight <span class="opt">(% of final grade)</span></label><input class="form-control" type="number" id="rvsFWeight" min="0" max="100" step="1"><div class="invalid-feedback">Enter a number from 0 to 100.</div></div>
+      </div>
+    </div>
+    <div class="modal-footer border-0 pt-0"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Save changes</button></div>
+  </form></div>
+</div>
+
+<!-- Confirm while clashes remain -->
+<div class="modal fade" id="rvsClashModal" tabindex="-1" aria-labelledby="rvsClashTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+    <div class="modal-header border-0 pb-0"><h2 class="modal-title fs-4" id="rvsClashTitle">Deadlines still clash</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+    <div class="modal-body"><p class="mb-0" id="rvsClashMsg"></p></div>
+    <div class="modal-footer border-0 pt-0"><button type="button" class="btn btn-secondary" id="rvsResolveNow">Resolve now</button><button type="button" class="btn btn-primary" id="rvsReviewLater">Review later</button></div>
+  </div></div>
+</div>
+
 <script src="../vendor/bootstrap/bootstrap.bundle.min.js"></script>
-<script src="js/config.js?v=20261027a"></script>
-<script src="js/store.js?v=20261027a"></script>
+<script src="js/config.js?v=20261028d"></script>
+<script src="js/store.js?v=20261028d"></script>
 <script src="js/app.js?v=20261027a"></script>
-<script src="js/review.js?v=20261027a"></script>
+<script src="js/review-core.js?v=20261028f"></script>
+<script src="js/review.js?v=20261028c"></script>
 </body>
 </html>

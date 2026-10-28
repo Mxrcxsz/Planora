@@ -124,6 +124,33 @@
   // real session actions are stamped with a time; seeded ones carry a fixed 'ago' label
   function log(t, icon) { var a = state.activity || (state.activity = []); a.unshift({ t: t, at: Date.now(), icon: icon || 'edit' }); if (a.length > 30) a.length = 30; }
   function wipe() { mem = null; state = seed('demo'); try { sessionStorage.removeItem(KEY); } catch (e) { /* ignore */ } }
+  // Deadlines confirmed on the Review page. The mock upload holds the demo semester's own deadlines
+  // with the same ids, so an event already on the calendar is updated in place (keeping its progress,
+  // room and notes) and only a missing one is added: uploading again never piles up copies.
+  var KEEP = { done: 1, progressStatus: 1, room: 1, notes: 1 };
+  function mergeConfirmed(files, events) {
+    events.forEach(function (e) {
+      var cur = state.events.filter(function (x) { return x.id === e.id; })[0];
+      if (!cur) { state.events.push(e); return; }
+      for (var k in e) if (!KEEP[k]) cur[k] = e[k];
+      if (!e.start) { cur.allDay = true; } else { delete cur.allDay; }
+      if (cur.tbd && !e.tbd) delete cur.tbd;
+    });
+    (files || []).forEach(function (f) { log(f + ' uploaded', 'up'); });
+    log(events.length + ' deadlines confirmed from review', 'ok');
+    var clashing = events.filter(function (e) { return e.conflict; }).length;
+    if (clashing) { state.conflictAck = false; log(clashing + ' deadlines clash on the same date', 'del'); }
+    save();
+  }
+  // The Review page hands confirmed deadlines over through localStorage and opens the Calendar;
+  // take them into this session once, then drop the hand-off.
+  (function importConfirmed() {
+    var k = window.PLANORA_CONFIRMED_KEY, raw = null, data = null;
+    if (!k) return;
+    try { raw = localStorage.getItem(k); localStorage.removeItem(k); data = raw && JSON.parse(raw); } catch (e) { return; }
+    var events = data && Array.isArray(data.events) ? data.events : [];
+    if (events.length) mergeConfirmed(data.files, events);
+  })();
 
   // ---------- extraction pools (fake syllabus reading) ----------
   var POOLS = {
@@ -208,6 +235,7 @@
     COURSE_NAMES: COURSE_NAMES, TYPE_GROUP: TYPE_GROUP, uid: uid,
     get state() { return state; },
     save: save,
+    mergeConfirmed: mergeConfirmed,
     reset: function (mode) { var u = state.user; state = seed(mode); state.user = u; save(); },
     // back to the untouched demo, logged out, so the next page load starts the whole flow again
     restart: wipe,

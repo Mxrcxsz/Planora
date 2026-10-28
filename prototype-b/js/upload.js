@@ -26,15 +26,17 @@
       dz.addEventListener('drop', function (e) { if (e.dataTransfer.files.length) pick(e.dataTransfer.files); });
     } else if (step === 'scanning') {
       p.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary mb-3" role="status" aria-hidden="true"></div><h2>Reading ' + UI.esc(fileName) + '…</h2>' +
-        '<p class="muted">' + (fileCount > 1 ? UI.esc(P.state.review.files.map(function (f) { return f.name; }).join(', ')) : 'This usually takes a few seconds.') + '</p><div class="scan-bar"><span id="bar"></span></div><div class="small muted" id="cnt">Found 0 dates so far</div>' +
+        '<p class="muted">' + (picked.length > 1 ? UI.esc(picked.join(', ')) : 'This usually takes a few seconds.') + '</p><div class="scan-bar"><span id="bar"></span></div><div class="small muted" id="cnt">Found 0 dates so far</div>' +
         '<div class="mt-3"><button type="button" class="btn btn-secondary btn-sm" id="skip">Skip to results</button></div></div>';
       requestAnimationFrame(function () { requestAnimationFrame(function () { var b = $('bar'); if (b) b.style.width = '100%'; }); });
       $('skip').onclick = finish;
     } else if (step === 'done') {
-      var r = P.state.review, n = r.items.length, bad = r.items.filter(function (i) { return i.status === 'check'; }).length;
-      var files = r.files || [];
-      p.innerHTML = '<div class="text-center py-3"><div class="state-icon ok" aria-hidden="true">✓</div><h2>Found ' + n + ' dates in ' + UI.esc(r.file) + '</h2>' +
-        '<p class="muted">' + (n - bad) + ' look right. ' + bad + ' need a quick check before they go on your calendar.</p>' +
+      // the same mock deadlines the Review page shows (review-core.js)
+      var R = PlReview, items = R.create(), n = items.length, bad = R.conflicted(items).length, counts = {};
+      items.forEach(function (d) { counts[d.sourceFile] = (counts[d.sourceFile] || 0) + 1; });
+      var files = Object.keys(counts).map(function (f) { return { name: f, count: counts[f] }; });
+      p.innerHTML = '<div class="text-center py-3"><div class="state-icon ok" aria-hidden="true">✓</div><h2>Found ' + n + ' dates in ' + UI.esc(fileName) + '</h2>' +
+        '<p class="muted">' + (n - bad) + ' look right. ' + (bad ? R.clashSummary(items, 'clash') + ', so check them before they go on your calendar.' : '') + '</p>' +
         (files.length > 1 ? '<ul class="upl-files">' + files.map(function (f) { return '<li><span class="n">' + UI.esc(f.name) + '</span><span class="c">' + f.count + (f.count === 1 ? ' date' : ' dates') + '</span></li>'; }).join('') + '</ul>' : '') +
         '<div class="d-flex gap-2 justify-content-center flex-wrap mt-3"><button type="button" class="btn btn-secondary" id="again">Upload another</button><a class="btn btn-primary" href="review.html">Review dates</a></div></div>';
       $('again').onclick = function () { P.state.review = null; P.save(); step = 'empty'; render(); };
@@ -60,12 +62,14 @@
     start(files.map(function (f) { return f.name; }));
   }
   function fail(m) { errMsg = m; step = 'error'; render(); }
-  var fileCount = 1;
+  var fileCount = 1, picked = [];
+  // The demo reads nothing from the file: every upload finds the same small mock set (review-core.js),
+  // and nothing changes on the calendar until the tester confirms on the Review page.
   function start(names) {
-    names = (Array.isArray(names) ? names : [names]).filter(Boolean); fileCount = Math.max(names.length, 1); step = 'scanning';
-    P.startExtraction(names);
-    fileName = P.state.review.file; found = 0; render();
-    var total = P.state.review.items.length;
+    picked = (Array.isArray(names) ? names : [names]).filter(Boolean); fileCount = Math.max(picked.length, 1); step = 'scanning';
+    fileName = picked.length > 1 ? picked.length + ' files' : picked[0] || 'the sample syllabi';
+    found = 0; render();
+    var total = PlReview.create().length;
     counter = setInterval(function () { found = Math.min(total, found + 1); var c = $('cnt'); if (c) c.textContent = 'Found ' + found + ' date' + (found === 1 ? '' : 's') + ' so far'; }, (2200 + (fileCount - 1) * 500) / (total + 1));
     timer = setTimeout(finish, 2300 + (fileCount - 1) * 500);
   }

@@ -1,0 +1,71 @@
+/* Review page, Prototype A: syllabus source side by side with the extracted list */
+.rvs-head{padding:32px 0 20px}
+.rvs-head h1{font-size:1.75rem}
+.rvs-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+
+/* source preview: a PDF viewer built on the Source evidence modal's .citation-* classes (theme.css);
+   everything below only adjusts them inside .rvs-viewer */
+.rvs-source-col{position:sticky;top:16px}
+.rvs-viewer{border:1px solid #2B2E38;border-radius:12px;overflow:hidden;background:#565A63}
+.rvs-viewer .citation-pdf-toolbar{height:56px;min-height:56px;padding:0 16px;gap:12px;background:#2B2E38;flex-wrap:nowrap}
+.rvs-viewer .citation-toolbar-file{flex:1;min-width:0;gap:12px;color:#AEB3C2;font-size:12px}
+.rvs-viewer .rvs-file-text{min-width:0;line-height:1.3}
+.rvs-viewer .citation-pdf-icon{width:34px;height:34px;border-radius:8px;background:#D9485B;font-size:10.5px}
+.rvs-viewer .citation-toolbar-name{max-width:none;font-size:14px;font-weight:700}
+.rvs-viewer .citation-toolbar-meta{gap:6px}
+.rvs-viewer .citation-toolbar-meta>span{border-color:#4A4E5B;background:#363A46;padding:.2rem .5rem;color:#E4E6EC;font-size:12px;font-weight:600;white-space:nowrap}
+.rvs-pg{width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1px solid #4A4E5B;border-radius:6px;background:transparent;color:#E4E6EC;font-size:15px;line-height:1}
+.rvs-pg:hover:not(:disabled){background:#363A46}
+.rvs-pg:disabled{opacity:.4;cursor:default}
+.rvs-viewer .citation-pdf-stage{min-height:500px;padding:22px 0 26px;background:#565A63;box-shadow:none;overflow:hidden}
+.rvs-viewer .citation-document{width:370px;max-width:100%;min-height:470px;display:flex;flex-direction:column;padding:34px 34px 26px;border:0;border-radius:0;box-shadow:0 6px 22px rgba(0,0,0,.35);overflow:visible;color:#2a2d38;font-family:'Fraunces',Georgia,serif;font-size:12.5px;line-height:1.65}
+.rvs-viewer .citation-document.swap{animation:rvsFade .25s var(--ease)}
+@keyframes rvsFade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.rvs-viewer .citation-document-brand{margin-bottom:22px;color:#8A8FA0;font-size:10.5px;font-weight:700;letter-spacing:.14em}
+.rvs-viewer .citation-document-course{margin:20px 0 12px;padding-bottom:6px;border-bottom:1px solid #E4E6EC;color:#2a2d38;font-family:'Fraunces',Georgia,serif;font-size:16.5px;font-weight:600;line-height:1.3}
+.rvs-viewer .citation-document-course:first-child{margin-top:0}
+.rvs-viewer .citation-document p{margin:0 0 12px}
+.rvs-viewer .citation-highlight{margin:0 -10px 12px!important;padding:8px 10px 9px;border:1px solid #F0D369;border-radius:3px;background:#FFEEA8;color:#15171C;font-weight:700}
+.rvs-viewer .citation-match-label{position:static;display:block;margin-bottom:3px;color:#8A6A00;font-size:9px;font-weight:800;letter-spacing:.08em;line-height:1.3}
+.rvs-viewer .citation-page-number{position:static;margin-top:auto;padding-top:14px;text-align:right;color:#9AA0B1;font-size:10.5px}
+
+.rvs-clash{margin-top:12px;padding:10px 14px;border:1px solid var(--danger-line);background:var(--danger-bg);color:var(--danger-fg);border-radius:var(--r-ctl);font-size:.85rem}
+.rvs-clash b{font-weight:700}
+
+/* deadline list */
+.rvs-list{overflow:hidden}
+.rvs-row{display:flex;align-items:center;gap:14px;padding:11px 16px;border-bottom:1px solid var(--line);border-left:3px solid transparent;cursor:pointer;transition:background .15s ease}
+.rvs-row:last-child{border-bottom:0}
+.rvs-row:hover{background:var(--bg)}
+.rvs-row.active{background:var(--accent-soft);border-left-color:var(--accent)}
+.rvs-row .n{width:18px;flex-shrink:0;color:var(--muted);font-size:.85rem;text-align:center}
+.rvs-row .body{flex:1;min-width:0}
+.rvs-row .t{font-weight:600;font-size:.92rem;line-height:1.3}
+.rvs-row .s{font-size:.78rem;color:var(--muted)}
+.rvs-row .btn{min-height:34px;padding:.3rem .8rem}
+
+/* footer */
+.rvs-foot{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin:20px 0 48px}
+.rvs-note{margin:0;font-size:.875rem;color:var(--muted)}
+.rvs-note.bad{color:var(--danger-fg);font-weight:600}
+
+@media(max-width:900px){
+  .rvs-grid{grid-template-columns:minmax(0,1fr)}
+  .rvs-source-col{position:static}
+  /* the modal's small-screen rules wrap its toolbar; this panel keeps one row */
+  .rvs-viewer .citation-pdf-toolbar{align-items:center;flex-wrap:nowrap;padding:0 16px}
+  .rvs-viewer .citation-toolbar-meta{width:auto}
+  .rvs-viewer .citation-toolbar-name{max-width:none}
+  .rvs-viewer .citation-pdf-stage{min-height:0;padding:18px 12px 22px}
+  .rvs-viewer .citation-document{width:100%;max-width:370px;min-height:420px;padding:28px 24px 22px}
+}
+@media(max-width:480px){
+  .rvs-viewer .citation-pdf-toolbar{padding:0 12px;gap:10px}
+  .rvs-viewer .rvs-zoom{display:none}
+  .rvs-row{flex-wrap:wrap;gap:8px 12px}
+  .rvs-row .body{flex-basis:calc(100% - 32px)}
+  .rvs-row .pbadge{margin-left:30px}
+  .rvs-row .btn{margin-left:auto}
+  .rvs-foot .d-flex{width:100%}.rvs-foot .btn{flex:1}
+}
+@media(prefers-reduced-motion:reduce){.rvs-viewer .citation-document.swap{animation:none}.rvs-row{transition:none}}
