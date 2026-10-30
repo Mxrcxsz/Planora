@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="../vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
 <link href="../css/theme.css?v=20261022a" rel="stylesheet">
-<link href="../css/review-source.css?v=20261028b" rel="stylesheet">
+<link href="../css/review-source.css?v=20261029a" rel="stylesheet">
 </head>
 <body>
 <div id="nav"></div>
@@ -25,7 +25,7 @@
       <div class="rvs-viewer">
         <div class="citation-pdf-toolbar">
           <div class="citation-toolbar-file"><span class="citation-pdf-icon" aria-hidden="true">PDF</span>
-            <div class="rvs-file-text"><div class="citation-toolbar-name" id="rvsFile"></div><div>Original file you uploaded</div></div></div>
+            <div class="rvs-file-text"><div class="citation-toolbar-name" id="rvsFile"></div><div id="rvsFileSub">Original file you uploaded</div></div></div>
           <div class="citation-toolbar-meta">
             <button type="button" class="rvs-pg" id="rvsPrev" aria-label="Previous page">‹</button>
             <span id="rvsPage" aria-live="polite"></span>
@@ -45,6 +45,7 @@
     </section>
     <section aria-label="Extracted deadlines">
       <div class="rvs-list pcard" id="rvsList"></div>
+      <button type="button" class="add-row" id="rvsAdd">+ Add a missing date</button>
     </section>
   </div>
 
@@ -87,6 +88,6 @@
 <script src="js/store.js?v=20261028d"></script>
 <script src="js/app.js?v=20261027a"></script>
 <script src="js/review-core.js?v=20261028f"></script>
-<script src="js/review.js?v=20261028c"></script>
+<script src="js/review.js?v=20261029a"></script>
 </body>
 </html>

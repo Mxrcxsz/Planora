@@ -43,6 +43,8 @@
 .rvs-row .t{font-weight:600;font-size:.92rem;line-height:1.3}
 .rvs-row .s{font-size:.78rem;color:var(--muted)}
 .rvs-row .btn{min-height:34px;padding:.3rem .8rem}
+.rvs-row.rvs-empty{cursor:default;color:var(--muted);justify-content:center}.rvs-row.rvs-empty:hover{background:none}
+.rvs-viewer .rvs-nosrc{margin:auto 0;text-align:center;color:#8A8FA0;font-style:italic}
 
 /* footer */
 .rvs-foot{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin:20px 0 48px}
@@ -65,7 +67,7 @@
   .rvs-row{flex-wrap:wrap;gap:8px 12px}
   .rvs-row .body{flex-basis:calc(100% - 32px)}
   .rvs-row .pbadge{margin-left:30px}
-  .rvs-row .btn{margin-left:auto}
+  .rvs-row .btn,.rvs-row .d-flex{margin-left:auto}
   .rvs-foot .d-flex{width:100%}.rvs-foot .btn{flex:1}
 }
 @media(prefers-reduced-motion:reduce){.rvs-viewer .citation-document.swap{animation:none}.rvs-row{transition:none}}
