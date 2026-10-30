@@ -3,17 +3,21 @@
   if (!UI.guard()) return;
   UI.nav('dashboard');
   var conflicts = P.conflicts(), target = UI.qs('id'), selected = target ? P.get(target) : conflicts[0];
-  var group = selected ? [selected].concat(conflicts.filter(function (e) { return e.id !== selected.id && e.date === selected.date && (e.start || '') === (selected.start || ''); })).slice(0, 2) : [];
+  // the overlap group holding the selected item; the page compares two of them side by side
+  var holder = selected ? P.conflictGroups().filter(function (g) { return g.indexOf(selected) >= 0; })[0] : null;
+  var group = holder ? [selected].concat(holder.filter(function (e) { return e !== selected; })).slice(0, 2) : [];
   var editing = null, done = null; // editing: id of the card showing the date picker; done: { title, text } once handled
   var WARN_SVG = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>';
   var when = function (e) { return D.short(e.date) + ' ' + D.parse(e.date).getFullYear() + ', ' + D.time12(e.start); };
   var name = function (e) { return e.course + ' ' + e.title; };
+  // "10:00 AM–12:00 PM", or just the time for something with no length
+  var span = function (e) { if (!e.start) return 'all day'; var m = D.mins(e.start), len = e.dur ? e.dur * 60 : e.cat === 'exams' ? 60 : 0; return D.time12(e.start) + (len ? '–' + D.time12(D.hhmm(m + len)) : ''); };
 
   function card(e) {
     var actions = editing === e.id
       ? '<div class="cf-resched"><label class="form-label" for="nd-' + e.id + '">New date and time</label>' +
         '<div class="d-flex gap-2"><input class="form-control" type="date" id="nd-' + e.id + '" value="' + e.date + '"><input class="form-control" type="time" id="nt-' + e.id + '" value="' + (e.start || '09:00') + '" aria-label="New time"></div>' +
-        '<div class="invalid-feedback" id="nerr-' + e.id + '">Pick a different date or time from the other deadline.</div>' +
+        '<div class="invalid-feedback" id="nerr-' + e.id + '"></div>' +
         '<div class="d-flex gap-2 mt-2"><button type="button" class="btn btn-secondary btn-sm flex-fill" data-act="cancel">Cancel</button><button type="button" class="btn btn-primary btn-sm flex-fill" data-act="move" data-id="' + e.id + '">Save new date</button></div></div>'
       : '<div class="d-grid gap-2"><button type="button" class="btn btn-secondary btn-sm" data-act="edit" data-id="' + e.id + '">Select new date</button>' +
         '<button type="button" class="btn btn-primary btn-sm" data-act="tbd" data-id="' + e.id + '">Mark as “TBD” (rescheduling)</button></div>';
@@ -36,7 +40,7 @@
     }
     $('view').innerHTML = '<section class="cf-box" aria-labelledby="cfTitle">' +
       '<div class="cf-head"><span class="cf-icon" aria-hidden="true">' + WARN_SVG + '</span><div><h2 id="cfTitle">Schedule conflict detected</h2>' +
-      '<p>' + D.long(a.date) + ' · ' + esc(name(a)) + ' and ' + esc(name(b)) + ' are both at ' + D.time12(a.start) + '.</p></div></div>' +
+      '<p>' + D.long(a.date) + ' · ' + esc(name(a)) + ' and ' + esc(name(b)) + (a.start === b.start ? ' are both at ' + D.time12(a.start) : ' overlap (' + span(a) + ' and ' + span(b) + ')') + '.</p></div></div>' +
       '<div class="cf-grid">' + card(a) + card(b) + '</div>' +
       '<div class="cf-later"><p>Or handle this conflict later:</p><div class="d-flex align-items-center gap-3 flex-wrap">' +
       '<a class="cf-link" href="dashboard.html">Review later</a><button type="button" class="btn btn-neutral btn-sm" data-act="keep">Keep both (acknowledge clash)</button></div></div></section>';
@@ -49,13 +53,17 @@
     cancel: function () { editing = null; render(); },
     move: function (t) {
       var e = P.get(t.dataset.id), o = other(e.id), d = $('nd-' + e.id), tm = $('nt-' + e.id);
-      if (!d.value || !tm.value || (d.value === o.date && tm.value === o.start)) { d.classList.add('is-invalid'); tm.classList.add('is-invalid'); $('nerr-' + e.id).style.display = 'block'; return; }
-      P.update(e.id, { date: d.value, start: tm.value, conflict: false, tbd: false }); P.update(o.id, { conflict: false });
+      var bad = function (msg) { d.classList.add('is-invalid'); tm.classList.add('is-invalid'); $('nerr-' + e.id).textContent = msg; $('nerr-' + e.id).style.display = 'block'; };
+      if (!d.value || !tm.value) return bad('Pick a new date and time.');
+      // nudging the time a few minutes isn't a fix: the new slot must clear everything, with a gap to get between them
+      var draft = { id: e.id, date: d.value, start: tm.value, dur: e.dur, cat: e.cat }, hits = P.clashesOf(draft);
+      if (hits.length) return bad('That still overlaps ' + name(hits[0]) + ' (' + span(hits[0]) + '). Leave at least ' + P.CLASH_GAP + ' minutes between them.');
+      P.update(e.id, { date: d.value, start: tm.value, conflict: false, tbd: false }); P.update(o.id, { conflict: P.clashesOf(o).length > 0 });
       finish('Rescheduled', name(e) + ' moved to ' + D.long(d.value) + ', ' + D.time12(tm.value) + '. ' + name(o) + ' keeps its slot.', d.value);
     },
     tbd: function (t) {
       var e = P.get(t.dataset.id), o = other(e.id);
-      P.update(e.id, { tbd: true, conflict: false }); P.update(o.id, { conflict: false });
+      P.update(e.id, { tbd: true, conflict: false }); P.update(o.id, { conflict: P.clashesOf(o).length > 0 });
       finish('Marked as TBD', name(e) + ' is marked TBD while it’s rescheduled. ' + name(o) + ' keeps its slot.', e.date);
     },
     keep: function () {

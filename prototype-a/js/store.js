@@ -204,13 +204,40 @@
     return s;
   }
 
-  // A/B sessions start on the demo account, so every upload must produce a schedule conflict.
+  // ---------- schedule clashes ----------
+  // Two timed items on the same day clash when their time ranges overlap or sit less than CLASH_GAP
+  // minutes apart (no time to get from one to the other). Start times don't have to match, so moving
+  // one from 10:00 to 10:01 still clashes. Classes, all-day and 11:59 PM deadlines, TBD and completed
+  // items never clash. An exam or quiz with no length counts as an hour; other deadlines are a moment.
+  var CLASH_GAP = 15;
+  function slotOf(e) {
+    if (!e || e.cat === 'timetable' || e.allDay || !e.start || e.start === '23:59' || e.tbd || API.progressOf(e) === 'completed') return null;
+    var s = D.mins(e.start), len = e.dur ? e.dur * 60 : e.cat === 'exams' ? 60 : 0;
+    return { s: s, t: s + len };
+  }
+  function overlaps(a, b) {
+    if (!a || !b || a === b || (a.id && a.id === b.id) || a.date !== b.date) return false;
+    var x = slotOf(a), y = slotOf(b); if (!x || !y) return false;
+    return x.s < y.t + CLASH_GAP && y.s < x.t + CLASH_GAP;
+  }
+  function clashesOf(e) { return state.events.filter(function (o) { return overlaps(e, o); }); }
+  // after e's date or time changed: flag what it now overlaps, and clear any former partner left with nothing
+  function recheckClash(e, before) {
+    if (!e || e.conflictType === 'information') return;
+    var now = clashesOf(e), was = !!e.conflict;
+    e.conflict = now.length > 0;
+    now.forEach(function (o) { if (!o.conflict) state.conflictAck = false; o.conflict = true; });
+    (before || []).forEach(function (o) { if (now.indexOf(o) < 0 && o.conflictType !== 'information') o.conflict = clashesOf(o).length > 0; });
+    if (e.conflict && !was) { state.conflictAck = false; log('“' + e.title + '” now clashes with “' + now[0].title + '”', 'del'); }
+    else if (e.conflict && was) log('“' + e.title + '” still overlaps “' + now[0].title + '”', 'del');
+  }
+
   // If no extracted item already shares a date and start time with an upcoming timed event (or another
   // item in the batch), move one extracted quiz/exam onto the best upcoming slot.
   function ensureClash(items) {
     var timed = function (e) { return e.cat !== 'timetable' && e.start && e.start !== '23:59' && API.progressOf(e) !== 'completed'; };
     var mine = items.filter(timed), pool = state.events.filter(function (e) { return timed(e) && e.date >= TODAY; }).concat(mine);
-    var clashes = mine.some(function (it) { return pool.some(function (o) { return o !== it && o.date === it.date && o.start === it.start; }); });
+    var clashes = mine.some(function (it) { return pool.some(function (o) { return o !== it && overlaps(it, o); }); });
     if (clashes) return;
     var upcoming = state.events.filter(function (e) { return timed(e) && e.date >= TODAY; });
     var shared = function (e) { return upcoming.some(function (o) { return o !== e && o.date === e.date && o.start === e.start; }) ? 1 : 0; };
@@ -258,15 +285,19 @@
     all: function () { return state.events; },
     deadlines: function () { return state.events.filter(function (e) { return e.cat !== 'timetable'; }); },
     get: function (id) { return state.events.filter(function (e) { return e.id === id; })[0] || null; },
-    add: function (e) { state.events.push(e); log('Added “' + e.title + '”', 'add'); save(); return e; },
+    add: function (e) { state.events.push(e); log('Added “' + e.title + '”', 'add'); recheckClash(e, []); save(); return e; },
     update: function (id, patch) {
       var e = API.get(id); if (!e) return e;
       var progressLabels = { not_started: 'Not Started', in_progress: 'In Progress', completed: 'Completed' };
       var msg = 'progressStatus' in patch && patch.progressStatus !== API.progressOf(e) ? ['Set “' + e.title + '” to ' + progressLabels[patch.progressStatus], patch.progressStatus === 'completed' ? 'ok' : 'edit']
         : 'done' in patch && patch.done !== e.done ? (patch.done ? ['Marked “' + e.title + '” done', 'ok'] : ['Reopened “' + e.title + '”', 'edit'])
         : 'conflict' in patch && e.conflict && !patch.conflict ? ['Resolved the clash on “' + e.title + '”', 'ok'] : ['Updated “' + e.title + '”', 'edit'];
+      var timing = !('conflict' in patch) && ['date', 'start', 'dur', 'allDay', 'tbd', 'cat', 'done', 'progressStatus'].some(function (k) { return k in patch; });
+      var before = timing ? clashesOf(e) : null;
       for (var k in patch) e[k] = patch[k];
-      log(msg[0], msg[1]); save(); return e;
+      log(msg[0], msg[1]);
+      if (timing) recheckClash(e, before);
+      save(); return e;
     },
     remove: function (id) { var e = API.get(id); state.events = state.events.filter(function (x) { return x.id !== id; }); if (e) log('Deleted “' + e.title + '”', 'del'); save(); },
     activity: function () { return state.activity || (state.activity = []); },
@@ -307,7 +338,7 @@
     statusOf: function (e) { return e.conflict ? 'conflict' : (e.status === 'check' ? 'check' : 'verified'); },
     conflictKindOf: function (e) {
       if (e.conflictType === 'schedule' || e.conflictType === 'information') return e.conflictType;
-      var clash = state.events.some(function (other) { return other.id !== e.id && other.conflict && other.date === e.date && (other.start || '') === (e.start || ''); });
+      var clash = clashesOf(e).some(function (other) { return other.conflict; });
       return clash ? 'schedule' : 'information';
     },
     badgeOf: function (e) { var s = API.statusOf(e); return s === 'conflict' ? { t: 'Conflict', c: 'danger' } : e.tbd ? { t: 'TBD', c: 'warn' } : s === 'check' ? { t: 'Check this', c: 'warn' } : { t: 'Verified', c: 'ok' }; },
@@ -327,6 +358,20 @@
       return Object.keys(set).filter(function (c) { return state.settings.removedCourses.indexOf(c) < 0; }).sort();
     },
     conflicts: function () { return state.events.filter(function (e) { return e.conflict; }); },
+    CLASH_GAP: CLASH_GAP,
+    // events overlapping e; e may be a draft such as { id, date, start, dur, cat } for a slot being considered
+    clashesOf: clashesOf,
+    recheckClash: recheckClash,
+    // flagged events bundled by overlap (A overlaps B, B overlaps C → one group), soonest first
+    conflictGroups: function () {
+      var left = API.conflicts().slice().sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : (a.start || '') < (b.start || '') ? -1 : 1; }), groups = [];
+      while (left.length) {
+        var g = [left.shift()];
+        for (var i = 0; i < g.length; i++) left = left.filter(function (o) { if (overlaps(g[i], o) || (o.date === g[i].date && (o.start || '') === (g[i].start || ''))) { g.push(o); return false; } return true; });
+        groups.push(g);
+      }
+      return groups;
+    },
     // review / fake extraction
     // fileNames: one name or a list of names; '' / [] uses the sample syllabus
     startExtraction: function (fileNames) {
@@ -369,7 +414,7 @@
       added.forEach(function (c) {
         if (!timed(c)) return;
         state.events.concat(added).forEach(function (o) {
-          if (o === c || !timed(o) || o.date !== c.date || o.start !== c.start) return;
+          if (o === c || !timed(o) || !overlaps(c, o)) return;
           if (!c.conflict) clashes++;
           c.conflict = true; o.conflict = true;
         });

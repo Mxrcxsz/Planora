@@ -64,10 +64,7 @@
   var layout = function () { return editing ? draft : saved(); };
 
   // ---------- data for one render ----------
-  function conflictGroups() {
-    var g = {}; P.conflicts().forEach(function (e) { var k = e.date + (e.start || ''); (g[k] = g[k] || []).push(e); });
-    return Object.keys(g).map(function (k) { return g[k]; });
-  }
+  function conflictGroups() { return P.conflictGroups(); }
   function context() {
     var all = P.deadlines(), open = all.filter(function (e) { return !e.done; }), d = function (e) { return D.diff(e.date, T); };
     var on = function (t) { return layout().some(function (w) { return w.type === t; }); };
@@ -115,7 +112,7 @@
     alert: function (w, c) {
       var g = c.groups[0];
       if (!g || P.state.conflictAck) return editing ? '<div class="alert-ghost">⚠ Conflict alert: shows here when two deadlines clash</div>' : '';
-      return '<a class="alert-banner" href="conflict.html"><span aria-hidden="true">⚠</span><div><b>Scheduling conflict —</b> ' + esc(g[0].course + ' ' + g[0].title) + (g[1] ? ' and ' + esc(g[1].course + ' ' + g[1].title) : '') + ' are both due ' + D.short(g[0].date) + ' at the same time.</div><span class="go">Resolve</span></a>';
+      return '<a class="alert-banner" href="conflict.html"><span aria-hidden="true">⚠</span><div><b>Scheduling conflict —</b> ' + esc(g[0].course + ' ' + g[0].title) + (g[1] ? ' and ' + esc(g[1].course + ' ' + g[1].title) : '') + (g[1] && g[0].start === g[1].start ? ' are both due ' + D.short(g[0].date) + ' at the same time.' : ' overlap on ' + D.short(g[0].date) + '.') + '</div><span class="go">Resolve</span></a>';
     },
     conflicts: function (w, c) {
       var BELL = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>';

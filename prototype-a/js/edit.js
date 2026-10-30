@@ -42,7 +42,9 @@
     }
     if (reviewMode && item.conflict && P.conflictKindOf(item) === 'information') patch.conflict = false;
     if (type === 'Exam' || type === 'Quiz') patch.cat = 'exams'; else if (type === 'Class') patch.cat = 'timetable'; else if (item.cat === 'exams' || item.cat === 'timetable') patch.cat = type === 'Other' ? 'other' : 'assignments';
+    var before = P.clashesOf(item);
     for (var k in patch) item[k] = patch[k];
+    if (!('conflict' in patch)) P.recheckClash(item, before);
     P.save(); UI.flash(reviewMode ? 'Saved and marked verified' : 'Changes saved'); location.href = back;
   });
   $('rm').addEventListener('click', function () {
